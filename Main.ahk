@@ -32,12 +32,12 @@ global randomKeyTimer := 0
 
 ; GUI句柄 (用于在不同函数中访问GUI控件)
 global MainGui
-global lv ; Make lv global so it can be accessed by other functions
-global delayGui := 0 ; Initialize GUI handles globally to manage their state
+global lv ; 使 lv 成为全局变量，以便其他函数可以访问 GUI 控件
+global delayGui := 0 ; 全局初始化 GUI 句柄以管理其状态
 global timerGui := 0
 global antiKickGui := 0
 global configGui := 0
-global AboutGui := 0 ; Also globalize AboutGui to manage its state
+global AboutGui := 0 ; 也全局化 AboutGui 以管理其状态
 
 ; --- Import Modules ---
 #Include Lib\Config.ahk
@@ -50,16 +50,12 @@ global AboutGui := 0 ; Also globalize AboutGui to manage its state
 
 ; --- Initialization Sequence ---
 try {
-    ; Load configuration first
     LoadConfig()
 
-    ; Check for necessary resources
     CheckResources()
 
-    ; Build and show the main GUI
     CreateMainGui()
 
-    ; Apply hotkeys
     ApplyHotkeys()
 
 } catch as e {
@@ -67,10 +63,6 @@ try {
     ExitApp()
 }
 
-; --- AutoClick Hotkey Implementation (Must remain in the main script or a file included *after* global config is set) ---
-; This specific hotkey uses the ~ prefix and global variables directly,
-; it's often simplest to keep it here or ensure it's in a file that's included
-; after all relevant global variables (like 'config' and 'isAutoClickEnabled') are defined.
 ~$LButton:: {
     global isAutoClickEnabled, config
 

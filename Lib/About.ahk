@@ -37,10 +37,11 @@ ShowAbout(*) {
     CheckForUpdate()
 }
 
+; 检查更新
 CheckForUpdate(*) {
     try {
         tempFile := A_Temp "\version_check.txt"
-        Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/version/version.txt", tempFile)
+        Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/refs/heads/version/version.txt", tempFile)
 
         if (FileExist(tempFile)) {
             remoteVersion := Trim(FileRead(tempFile))
@@ -50,7 +51,7 @@ CheckForUpdate(*) {
             if (CompareVersions(remoteVersion, localVersion) > 0) {
                 result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")
                 if (result = "Yes") {
-                    Run("https://github.com/cabbagelol/SkullAndBonesHelper/releases/latest")
+                    Run("https://github.com/cabbagelol/SkullAndBonesHelper")
                 }
             } else {
                 MsgBox("当前已是最新版本。", "检查更新", "64")

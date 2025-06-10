@@ -53,7 +53,7 @@ CreateMainGui() {
     lv.ModifyCol(2, 70)
     lv.ModifyCol(3, 60)
 
-    ; Populate ListView with initial data
+    ; 使用初始数据填充ListView
     UpdateFunctionList()
 
     ; 双击事件
@@ -66,9 +66,9 @@ CreateMainGui() {
 UpdateFunctionList() {
     global config, isAutoClickEnabled, timerRunning, isRandomKeyEnabled, lv
 
-    lv.Delete() ; Correct way to clear all items in AutoHotkey v2
+    lv.Delete() ; AutoHotkey v2 中清除所有项目的正确方法
 
-    ; Add function entries.
+    ; 添加功能条目
     lv.Add("Check", "左键自动", config["hotkeys"]["autoClick"], isAutoClickEnabled ? "开启" : "关闭")
     if isAutoClickEnabled
         lv.Modify(1, "Check")
@@ -90,13 +90,13 @@ UpdateListViewHotkeys() {
     lv.Modify(3,,, config["hotkeys"]["antiKick"])
 }
 
-; 配置功能 (decides which config GUI to show)
+; 配置功能 (决定显示哪个配置GUI)
 ConfigureFunction(lv_ctrl) {
-    row := lv_ctrl.GetNext() ; Get the selected row
+    row := lv_ctrl.GetNext() ; 获取选定的行
     if (!row)
         return
 
-    functionName := lv_ctrl.GetText(row, 1) ; Get the function name (from the first column)
+    functionName := lv_ctrl.GetText(row, 1) ; 获取功能名称（来自第一列）
 
     ; 根据功能显示不同配置
     switch functionName {

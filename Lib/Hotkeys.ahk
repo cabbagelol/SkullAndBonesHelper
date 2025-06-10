@@ -33,7 +33,6 @@ ToggleTimer(*) {
     if timerRunning {
         StopTimer() ; Call the function from Lib\Functions.ahk
     } else {
-        ; Start timer with default duration (e.g., 60 seconds) when hotkey is pressed
         StartTimer(60 * 1000) ; Call the function from Lib\Functions.ahk
     }
 }
@@ -44,7 +43,6 @@ ToggleAntiKick(*) {
     isRandomKeyEnabled := !isRandomKeyEnabled
 
     if isRandomKeyEnabled {
-        ; Start anti-kick with a default interval (e.g., 60 seconds) when hotkey is pressed
         StartAntiKick(60 * 1000) ; Call the function from Lib\Functions.ahk
     } else {
         if randomKeyTimer {

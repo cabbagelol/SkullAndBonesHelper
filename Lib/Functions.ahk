@@ -5,14 +5,14 @@
 StartTimer(duration) {
     global timerRunning, timerEndTime, lv, config
 
-    ; Stop any existing timer before starting a new one
+    ; 在启动新计时器之前停止任何现有计时器
     if timerRunning {
         SetTimer(UpdateTimer, 0)
     }
 
     timerEndTime := A_TickCount + duration
     timerRunning := true
-    SetTimer(UpdateTimer, 1000) ; Update every second
+    SetTimer(UpdateTimer, 1000) ; 每秒更新
 
     lv.Modify(2, "Check", "计时器", config["hotkeys"]["timer"], "运行中")
     ToolTip("计时器已启动。", 10, 30)
@@ -25,16 +25,16 @@ UpdateTimer() {
     remaining := timerEndTime - A_TickCount
     if (remaining <= 0) {
         timerRunning := false
-        SetTimer(UpdateTimer, 0) ; Stop the timer
-        SoundPlay("*64") ; Play a sound when the timer finishes
+        SetTimer(UpdateTimer, 0) ; 停止计时器
+        SoundPlay("*64") ; 计时器结束时播放声音
 
         lv.Modify(2, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
-        ToolTip() ; Clear the tooltip
+        ToolTip() ; 清除提示
         return
     }
 
     seconds := Floor(remaining / 1000)
-    lv.Modify(2,"Check", "计时器", config["hotkeys"]["timer"],seconds "秒") ; Update the ListView with remaining seconds
+    lv.Modify(2,"Check", "计时器", config["hotkeys"]["timer"],seconds "秒") ; 更新 ListView 显示剩余秒数
     ToolTip("倒计时: " seconds "秒", 10, 30)
 }
 
@@ -42,11 +42,11 @@ UpdateTimer() {
 StopTimer() {
     global timerRunning, lv, config
     timerRunning := false
-    SetTimer(UpdateTimer, 0) ; Stop the timer update
+    SetTimer(UpdateTimer, 0) ; 停止计时器更新
 
     lv.Modify(2, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
 
-    ToolTip() ; Clear the tooltip
+    ToolTip() ; 清除提示
 }
 
 ; --- 防踢功能 ---

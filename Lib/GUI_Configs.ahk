@@ -30,7 +30,7 @@ SaveDelaySettings_Handler(downEdit, upEdit, currentDelayGui) {
 
     config["delays"]["down"] := downEdit.Value
     config["delays"]["up"] := upEdit.Value
-    SaveConfig() ; Call the function from Lib\Config.ahk
+    SaveConfig() ; 调用 Lib\Config.ahk 中的函数
     currentDelayGui.Destroy()
     MsgBox("延迟设置已保存！", "提示", 0x40)
 }
@@ -63,7 +63,7 @@ StartTimer_Handler(durationEdit, currentTimerGui) {
         return
     }
     duration := durationEdit.Value * 1000
-    StartTimer(duration) ; Call the function from Lib\Functions.ahk
+    StartTimer(duration) ; 调用 Lib\Functions.ahk 中的函数
     currentTimerGui.Destroy()
 }
 
@@ -95,7 +95,7 @@ StartAntiKick_Handler(intervalEdit, currentAntiKickGui) {
         return
     }
     interval := intervalEdit.Value * 1000
-    StartAntiKick(interval) ; Call the function from Lib\Functions.ahk
+    StartAntiKick(interval) ; 调用 Lib\Functions.ahk 中的函数
     currentAntiKickGui.Destroy()
 }
 

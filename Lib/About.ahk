@@ -18,7 +18,8 @@ ShowAbout(*) {
     AboutGui.SetFont("s12 bold")
     AboutGui.Add("Text", "xp+40 yp", "Skull and Bones 小助手")
     AboutGui.SetFont("s10 norm")
-    AboutGui.Add("Text", "xp y+2", "版本 " IniRead(configFile, "App", "version", config["app"]["version"]))
+    localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
+    AboutGui.Add("Text", "xp y+2", "版本 " localVersion)
 
     AboutGui.Add("Text", "x20 y+10 w300 0x10")
 
@@ -27,5 +28,54 @@ ShowAbout(*) {
     AboutGui.Add("Text", "x20 y+5", "脚本，通过模拟输入端实现功能。")
     AboutGui.Add("Text", "x20 y+5", "By cabbagelol")
 
+    ; 添加检查更新按钮
+    AboutGui.Add("Button", "x20 y+20 w80 h30 Default", "检查更新").OnEvent("Click", CheckForUpdate)
+
     AboutGui.Show("AutoSize Center")
+
+    ; 自动检查更新
+    CheckForUpdate()
+}
+
+CheckForUpdate(*) {
+    try {
+        tempFile := A_Temp "\version_check.txt"
+        Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/version/version.txt", tempFile)
+
+        if (FileExist(tempFile)) {
+            remoteVersion := Trim(FileRead(tempFile))
+            FileDelete(tempFile)
+            localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
+
+            if (CompareVersions(remoteVersion, localVersion) > 0) {
+                result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")
+                if (result = "Yes") {
+                    Run("https://github.com/cabbagelol/SkullAndBonesHelper/releases/latest")
+                }
+            } else {
+                MsgBox("当前已是最新版本。", "检查更新", "64")
+            }
+        } else {
+            MsgBox("无法下载版本信息文件。", "错误", "16")
+        }
+    } catch as e {
+        MsgBox("检查更新时出错: " e.Message, "错误", "16")
+    }
+}
+
+; 比较版本号函数 (格式如 1.2.3)
+CompareVersions(v1, v2) {
+    v1 := StrSplit(v1, ".")
+    v2 := StrSplit(v2, ".")
+
+    loop Max(v1.Length, v2.Length) {
+        n1 := v1.Has(A_Index) ? v1[A_Index] : 0
+        n2 := v2.Has(A_Index) ? v2[A_Index] : 0
+
+        if (n1 > n2)
+            return 1
+        if (n1 < n2)
+            return -1
+    }
+    return 0
 }

@@ -164,7 +164,7 @@ InitiateAutoOpening(*) {
 
         ; 按下ESC
         Send "{Esc}"
-        Sleep 100  ; 100ms停顿
+        Sleep 1000  ; 100ms停顿
 
         ; 显示进度
         if Mod(A_Index, 10) = 0 || A_Index = boxOpenTimes

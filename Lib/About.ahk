@@ -46,7 +46,7 @@ CheckForUpdate(*) {
         if (FileExist(tempFile)) {
             remoteVersion := Trim(FileRead(tempFile))
             FileDelete(tempFile)
-            localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
+            localVersion := IniRead(configFile, "App", "version", config["app"]["Version"])
 
             if (CompareVersions(remoteVersion, localVersion) > 0) {
                 result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")

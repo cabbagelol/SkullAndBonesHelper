@@ -7,6 +7,7 @@ LoadConfig() {
     if FileExist(configFile) {
         try {
             config["hotkeys"]["autoClick"] := IniRead(configFile, "Hotkeys", "AutoClick", config["hotkeys"]["autoClick"])
+            config["hotkeys"]["autoOpenBox"] := IniRead(configFile, "Hotkeys", "AutoOpenBox", config["hotkeys"]["autoOpenBox"])
             config["hotkeys"]["timer"] := IniRead(configFile, "Hotkeys", "Timer", config["hotkeys"]["timer"])
             config["hotkeys"]["antiKick"] := IniRead(configFile, "Hotkeys", "AntiKick", config["hotkeys"]["antiKick"])
 
@@ -25,11 +26,15 @@ SaveConfig() {
 
     try {
         IniWrite(config["hotkeys"]["autoClick"], configFile, "Hotkeys", "AutoClick")
+        IniWrite(config["hotkeys"]["autoOpenBox"], configFile, "Hotkeys", "AutoOpenBox")
         IniWrite(config["hotkeys"]["timer"], configFile, "Hotkeys", "Timer")
         IniWrite(config["hotkeys"]["antiKick"], configFile, "Hotkeys", "AntiKick")
 
         IniWrite(config["delays"]["down"], configFile, "Delays", "Down")
         IniWrite(config["delays"]["up"], configFile, "Delays", "Up")
+
+        IniWrite(config["app"]["version"], configFile, "App", "Version")
+
     } catch as e {
         MsgBox("保存配置失败: " e.Message, "错误", 0x10)
     }

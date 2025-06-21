@@ -18,6 +18,8 @@ CreateMainGui() {
     FunMenu.Add("&左键自动 " config["hotkeys"]["autoClick"], (*) => ToggleAutoClick())
     FunMenu.Add("&计时器 " config["hotkeys"]["timer"], (*) => ToggleTimer())
     FunMenu.Add("&防踢状态 " config["hotkeys"]["antiKick"], (*) => ToggleAntiKick())
+    FunMenu.Add("&自动打开箱子 " config["hotkeys"]["autoOpenBox"], (*) => ToggleAutoOpenBox())
+
     HelpMenu := Menu()
     HelpMenu.Add("&关于", (*) => ShowAbout())
 
@@ -28,7 +30,7 @@ CreateMainGui() {
     ; 创建主窗口
     MainGui := Gui()
     MainGui.MenuBar := MainMenu
-    MainGui.Title := ""
+    MainGui.Title := IniRead(configFile, "App", "version", config["app"]["version"])
     local transparentColor := "F2F2F2"
     MainGui.BackColor := transparentColor
     MainGui.OnEvent("Close", (*) => ExitApp())
@@ -64,7 +66,7 @@ CreateMainGui() {
 
 ; 更新ListView中功能列表的显示
 UpdateFunctionList() {
-    global config, isAutoClickEnabled, timerRunning, isRandomKeyEnabled, lv
+    global config, isAutoClickEnabled ,isAutoOpenBoxEnabled , timerRunning, isRandomKeyEnabled, lv
 
     lv.Delete() ; AutoHotkey v2 中清除所有项目的正确方法
 
@@ -80,6 +82,10 @@ UpdateFunctionList() {
     lv.Add("Check", "防踢状态", config["hotkeys"]["antiKick"], isRandomKeyEnabled ? "开启" : "关闭")
     if isRandomKeyEnabled
         lv.Modify(3, "Check")
+
+    lv.Add("Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], isAutoOpenBoxEnabled ? "开启" : "关闭")
+    if isAutoOpenBoxEnabled
+        lv.Modify(4, "Check")
 }
 
 ; 更新ListView中的快捷键显示
@@ -88,6 +94,7 @@ UpdateListViewHotkeys() {
     lv.Modify(1,,, config["hotkeys"]["autoClick"])
     lv.Modify(2,,, config["hotkeys"]["timer"])
     lv.Modify(3,,, config["hotkeys"]["antiKick"])
+    lv.Modify(4,,, config["hotkeys"]["autoOpenBox"])
 }
 
 ; 配置功能 (决定显示哪个配置GUI)
@@ -106,5 +113,6 @@ ConfigureFunction(lv_ctrl) {
             ShowTimerConfig()
         case "防踢状态":
             ShowAntiKickConfig()
+        case "自动打开箱子":
     }
 }

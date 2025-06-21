@@ -109,32 +109,37 @@ ShowHotkeyConfig(*) {
     configGui.Add("Text", "x20 y20 w100", "左键自动:")
     autoClickHotkey := configGui.Add("Hotkey", "x120 y20 w100", config["hotkeys"]["autoClick"])
 
-    configGui.Add("Text", "x20 y60 w100", "计时功能:")
-    timerHotkey := configGui.Add("Hotkey", "x120 y60 w100", config["hotkeys"]["timer"])
+    configGui.Add("Text", "x20 y50 w100", "计时功能:")
+    timerHotkey := configGui.Add("Hotkey", "x120 y50 w100", config["hotkeys"]["timer"])
 
-    configGui.Add("Text", "x20 y100 w100", "防踢功能:")
-    antiKickHotkey := configGui.Add("Hotkey", "x120 y100 w100", config["hotkeys"]["antiKick"])
+    configGui.Add("Text", "x20 y80 w100", "防踢功能:")
+    antiKickHotkey := configGui.Add("Hotkey", "x120 y80 w100", config["hotkeys"]["antiKick"])
 
-    configGui.Add("Button", "x50 y150 w80 Default", "保存").OnEvent("Click", (*) => SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, configGui))
+    configGui.Add("Text", "x20 y110 w100", "自动打开箱子:")
+    autoOpenBoxkey := configGui.Add("Hotkey", "x120 y110 w100", config["hotkeys"]["autoOpenBox"])
+
+    configGui.Add("Button", "x50 y150 w80 Default", "保存").OnEvent("Click", (*) => SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, autoOpenBoxkey, configGui))
 
     configGui.Add("Button", "x150 y150 w80", "取消").OnEvent("Click", (*) => configGui.Destroy())
     configGui.Show("Center")
 }
 
-SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, currentConfigGui) {
+SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, autoOpenBoxkey, currentConfigGui) {
      global config
 
      local autoClickVal := autoClickHotkey.Value
      local timerVal := timerHotkey.Value
      local antiKickVal := antiKickHotkey.Value
+     local autoOpenBoxVal := autoOpenBoxkey.Value
 
      local newHotkeys := Map(
          "autoClick", autoClickVal,
          "timer", timerVal,
-         "antiKick", antiKickVal
+         "antiKick", antiKickVal,
+         "autoOpenBox", autoOpenBoxVal,
      )
 
-     if newHotkeys["autoClick"] = "" || newHotkeys["timer"] = "" || newHotkeys["antiKick"] = "" {
+     if newHotkeys["autoClick"] = "" || newHotkeys["timer"] = "" || newHotkeys["antiKick"] = "" || newHotkeys["autoOpenBox"] = "" {
          MsgBox("快捷键不能为空！", "错误", 0x10)
          return
      }

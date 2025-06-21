@@ -5,11 +5,13 @@ ApplyHotkeys() {
     global config
 
     try Hotkey(config["hotkeys"]["autoClick"], "Off")
+    try Hotkey(config["hotkeys"]["autoOpenBox"], "Off")
     try Hotkey(config["hotkeys"]["timer"], "Off")
     try Hotkey(config["hotkeys"]["antiKick"], "Off")
 
     ; The '$' prefix makes the hotkey function even when the script's own window is active.
     try Hotkey("$" config["hotkeys"]["autoClick"], ToggleAutoClick, "On")
+    try Hotkey("$" config["hotkeys"]["autoOpenBox"], ToggleAutoOpenBox, "On")
     try Hotkey("$" config["hotkeys"]["timer"], ToggleTimer, "On")
     try Hotkey("$" config["hotkeys"]["antiKick"], ToggleAntiKick, "On")
 }
@@ -52,5 +54,18 @@ ToggleAntiKick(*) {
         lv.Modify(3, "-Check", "防踢状态", config["hotkeys"]["antiKick"], "关闭")
         ToolTip("防踢模式已关闭", 10, 50)
         SetTimer(() => ToolTip(), -1000)
+    }
+}
+
+; 自动打开箱子
+ToggleAutoOpenBox(*) {
+    global isAutoOpenBoxEnabled, autoOpenBoxRunning, config
+    isAutoOpenBoxEnabled := !isAutoOpenBoxEnabled
+
+    if autoOpenBoxRunning {
+        autoOpenBoxRunning := false
+    } else {
+        StartAutoOpenBox()
+        autoOpenBoxRunning := true
     }
 }

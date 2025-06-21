@@ -4,13 +4,14 @@
 #Warn All, Off
 
 ; --- Global Variables and Configuration ---
-; 配置文件路径
+; 配置文件路径 1
 configFile := A_ScriptDir "\config.ini"
 
 ; 默认配置
 global config := Map(
     "hotkeys", Map(
         "autoClick", "F1",
+        "autoOpenBox", "F4",
         "timer", "F2",
         "antiKick", "F3"
     ),
@@ -25,6 +26,8 @@ global config := Map(
 
 ; 功能状态变量
 global isAutoClickEnabled := false
+global isAutoOpenBoxEnabled := false
+global autoOpenBoxRunning := false
 global timerRunning := false
 global timerEndTime := 0
 global isRandomKeyEnabled := false

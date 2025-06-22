@@ -9,11 +9,43 @@ ApplyHotkeys() {
     try Hotkey(config["hotkeys"]["timer"], "Off")
     try Hotkey(config["hotkeys"]["antiKick"], "Off")
 
-    ; The '$' prefix makes the hotkey function even when the script's own window is active.
-    try Hotkey("$" config["hotkeys"]["autoClick"], ToggleAutoClick, "On")
-    try Hotkey("$" config["hotkeys"]["autoOpenBox"], ToggleAutoOpenBox, "On")
-    try Hotkey("$" config["hotkeys"]["timer"], ToggleTimer, "On")
-    try Hotkey("$" config["hotkeys"]["antiKick"], ToggleAntiKick, "On")
+    if (IsValidHotkey(config["hotkeys"]["autoClick"], ["LButton"])) {
+        try Hotkey("$" config["hotkeys"]["autoClick"], ToggleAutoClick, "On")
+    } else {
+        config["hotkeys"]["autoClick"] := "XButton1" ; 设置默认值
+        SaveConfig()
+        try Hotkey("$XButton1", ToggleAutoClick, "On")
+    }
+
+    if (IsValidHotkey(config["hotkeys"]["autoOpenBox"])) {
+        try Hotkey("$" config["hotkeys"]["autoOpenBox"], ToggleAutoOpenBox, "On")
+    }
+
+    if (IsValidHotkey(config["hotkeys"]["timer"])) {
+        try Hotkey("$" config["hotkeys"]["timer"], ToggleTimer, "On")
+    }
+
+    if (IsValidHotkey(config["hotkeys"]["antiKick"])) {
+        try Hotkey("$" config["hotkeys"]["antiKick"], ToggleAntiKick, "On")
+    }
+}
+
+; 检查热键是否有效
+IsValidHotkey(hotkey, excludeList := []) {
+    ; 检查是否在排除列表中
+    for exclude in excludeList {
+        if (hotkey = exclude) {
+            return false
+        }
+    }
+
+    ; 检查是否为空
+    if (hotkey = "") {
+        return false
+    }
+
+    ; 其他有效性检查...
+    return true
 }
 
 ; --- 功能开关与执行 (由快捷键触发的逻辑) ---

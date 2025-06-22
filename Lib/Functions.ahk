@@ -52,7 +52,7 @@ StopTimer() {
 ; --- 防踢功能 ---
 global boxOpenCountDdl        ; 开箱次数下拉列表控件
 global customBoxCountEdit     ; 自定义次数输入框控件
-global customBoxCountText     ; 自定义次数文本标签控件
+global customBoxCountText    ; 自定义次数文本标签控件
 
 ; 启动防踢
 StartAntiKick(interval) {
@@ -85,17 +85,25 @@ SendRandomKey() {
 }
 
 ; --- 自动打开箱子
+global myAutoOpenGui := ""
 ; 启动自动开箱功能的入口
 StartAutoOpenBox() {
-    global boxOpenCountDdl
+    global boxOpenCountDdl, customBoxCountEdit, customBoxCountText
+    global myAutoOpenGui
+
+    ; 检查是否已经有一个 GUI 实例存在并且没有被销毁
+    if IsObject(myAutoOpenGui) && myAutoOpenGui.Hwnd {
+        myAutoOpenGui.Show() ; 如果已存在，直接显示并激活它
+        return
+    }
 
     myAutoOpenGui := Gui()
     myAutoOpenGui.Title := "自动开箱设置"
     myAutoOpenGui.Add("Text",, "选择开箱次数:")
-    boxOpenCountDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenCountChoice Choose1", ["3次", "10次", "300次", "自定义"])
+    boxOpenCountDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenCountChoice Choose1", ["3次", "10次", "100次", "500次" ,"1000次", "自定义"])
 
     ; 添加自定义次数输入框
-    customBoxCountEdit := myAutoOpenGui.Add("Edit", "vCustomBoxCount Number Limit5 w160 Hidden", "1")
+    customBoxCountEdit := myAutoOpenGui.Add("Edit", "vCustomBoxCount Number Limit5 w160 Hidden", 1)
     customBoxCountText := myAutoOpenGui.Add("Text", "x+5 Hidden", "次")
 
     ; 当下拉框选择"自定义"时显示编辑框
@@ -112,10 +120,12 @@ StartAutoOpenBox() {
 
 ; 实际执行自动开箱操作的函数
 InitiateAutoOpening(*) {
-    global autoOpenBoxRunning, boxOpenCountDdl, lv ; 在函数内部声明要修改的全局变量
+    global autoOpenBoxRunning, boxOpenCountDdl, lv, customBoxCountEdit, myAutoOpenGui
 
-    ; 重置停止标志
-    autoOpenBoxRunning := false
+    ; 重置停止标志（这可能应该设置为 true 以指示它正在运行）
+    ; 你当前将 autoOpenBoxRunning 设置为 false，这将立即中断循环。
+    ; 它应该在自动打开过程开始时设置为 true。
+    autoOpenBoxRunning := true
 
     ; 直接从下拉列表控件获取其当前的索引值
     selectedBoxCountIndex := boxOpenCountDdl.Value
@@ -123,10 +133,17 @@ InitiateAutoOpening(*) {
 
     ; 根据选择确定执行次数
     switch selectedBoxCountIndex {
-        case 1: boxOpenTimes := 3    ; 第一项"3次"
-        case 2: boxOpenTimes := 10   ; 第二项"10次"
-        case 3: boxOpenTimes := 300   ; 第三项"300次"
-        case 4: boxOpenTimes := Integer(customBoxCountEdit.Value) ; 第四项"自定义"，从 customBoxCountEdit 获取值
+        case 1: boxOpenTimes := 3
+        case 2: boxOpenTimes := 10
+        case 3: boxOpenTimes := 100
+        case 4: boxOpenTimes := 500
+        case 5: boxOpenTimes := 1000
+        case 6:
+        try {
+            boxOpenTimes := Integer(customBoxCountEdit.Value)
+        } catch {
+            Return
+        }
     }
 
     if boxOpenTimes <= 0 {
@@ -143,41 +160,47 @@ InitiateAutoOpening(*) {
     Sleep 1000
     ToolTip
 
-    lv.Modify(4, isAutoClickEnabled ? "Check" : "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "开启")
+    ; 更新 lv 中的状态（假设 lv 是你的 ListView 控件）
+    ; 确保 config 和 isAutoClickEnabled 也是全局可访问的或已传递。
+    ; 这行可能需要根据你管理 isAutoClickEnabled 和 config 的方式进行调整。
+    lv.Modify(4, "Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "开启")
 
     ; 执行模拟操作
     Loop boxOpenTimes {
-        ; 在每次操作前检查停止标志
-        if autoOpenBoxRunning {
-            ToolTip
-            MsgBox "自动开箱已停止!", "提示", 0x40
+        ; 在每次操作前检查停止标志（此检查应针对 *停止* 信号）
+        ; 你当前的逻辑是在 autoOpenBoxRunning 为 true 时中断，这意味着它正在运行。
+        ; 你需要一个单独的停止标志，或者反转这个逻辑。
+        ; 例如，引入一个 `stopAutoOpen := false` 全局变量。
+        ; 让我们假设 autoOpenBoxRunning 应该为 *false* 才能停止。
+        if (!autoOpenBoxRunning) { ; 如果 autoOpenBoxRunning 变为 false（外部停止）
+            lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
             break ; 跳出循环
         }
 
         ; 第一次空格
-        Send "{Space}"
-        Sleep 800  ; 800ms间隔
+        SetKeyDelay(50, 50)
+        SendEvent("{Space}") ; 或者 SendPlay("{Space}")
+        Sleep(1100)
 
         ; 第二次空格
-        Send "{Space}"
-        Sleep 1100
+        SendEvent("{Space}") ; 或者 SendPlay("{Space}")
+        Sleep(1100)
 
         ; 按下ESC
-        Send "{Esc}"
-        Sleep 1000  ; 100ms停顿
+        SendEvent("{Esc}") ; 或者 SendPlay("{Esc}")
+        Sleep(500)
 
         ; 显示进度
-        if Mod(A_Index, 10) = 0 || A_Index = boxOpenTimes
-            ToolTip "开箱进度: " A_Index "/" boxOpenTimes
+        lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], A_Index "/" boxOpenTimes)
+        ToolTip("进度:" A_Index "/" boxOpenTimes, 10, 30)
 
-        ; 如果已经到达设定的次数，且没有被停止，就显示完成
-        if (A_Index = boxOpenTimes && !autoOpenBoxRunning) {
-            lv.Modify(4, isAutoClickEnabled ? "Check" : "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
-
-            ToolTip
-            MsgBox "自动开箱完成!", "完成", 0x40
+        ; 如果已经达到设定的次数，且没有被停止，就显示完成
+        if (A_Index = boxOpenTimes && autoOpenBoxRunning) { ; 检查是否仍在运行
+            lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
+            ToolTip("自动开箱完成!", 10, 30)
+            SetTimer(() => ToolTip(), -3000)
         }
     }
 
-    ToolTip ; 清除最后的 ToolTip
+    autoOpenBoxRunning := false ; 确保循环完成后重置
 }

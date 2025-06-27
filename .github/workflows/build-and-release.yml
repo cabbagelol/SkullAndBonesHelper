@@ -22,7 +22,9 @@ jobs:
           out: .\Main.exe # 输出可执行文件路径和名称
           icon: .\UI_Main_Icon.ico # 可选：指定图标文件路径
           target: x64 # 编译目标架构
-          ahk-tag: v2 # 明确指定 AutoHotkey V2 版本，以防 'latest' 默认到 V1
+          ahk-tag: v2.0.12 # <-- 修改此处：明确指定 AutoHotkey V2 的稳定版本
+                               # 推荐使用具体的稳定版本号，例如 'v2.0.12'。
+                               # 如果需要最新版，请根据 AutoHotkey 的 Releases 页面找到最新稳定版的标签。
 
       - name: Generate Archive Name # 生成压缩包名称
         id: create_archive_name # 为此步骤设置一个ID，以便在后续步骤中引用其输出

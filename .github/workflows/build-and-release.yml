@@ -23,8 +23,23 @@ jobs:
           icon: .\UI_Main_Icon.ico # 可选：指定图标文件路径
           target: x64 # 编译目标架构
           ahk-tag: latest # 使用最新版本的 AutoHotkey v1 或 v2 (根据您脚本的需求，如果您的脚本是v2，这里可能需要'v2.0-latest'或特定版本)
-          # github-token 在上传 Release Asset 时由 upload-release-asset Action 使用，
-          # 通常不需要在这里显式传递给 ahk2exe-action
+
+      - name: Generate Archive Name # 生成压缩包名称
+        id: create_archive_name # 为此步骤设置一个ID，以便在后续步骤中引用其输出
+        run: |
+          # 获取 Release Tag，并移除前缀 'v' (例如，v1.0.0 -> 1.0.0)
+          # 注意：PowerShell 中 $Env:GITHUB_REF 指向 refs/tags/vX.Y.Z
+          $tag = "${{ github.event.release.tag }}"
+          $version = $tag -replace '^v', ''
+          $archiveName = "${version}-x86.zip" # 按照您的要求，名称包含 -x86
+          echo "archive_name=$archiveName" >> $Env:GITHUB_OUTPUT # 将生成的文件名设置为步骤输出
+
+      - name: Create Release Archive # 压缩所有相关文件和文件夹
+        run: |
+          # 使用 PowerShell 的 Compress-Archive 命令进行压缩
+          # 将 Main.ahk, UI_MainMenu_Background.png, UI_Main_Icon.ico, config.ini, Main.exe, 和整个 lib 文件夹打包
+          # 注意：确保所有这些文件和文件夹都在工作目录的根目录下或相对路径正确
+          Compress-Archive -Path .\Main.ahk, .\UI_MainMenu_Background.png, .\UI_Main_Icon.ico, .\config.ini, .\Main.exe, .\lib -DestinationPath ${{ steps.create_archive_name.outputs.archive_name }}
 
       - name: Upload Release Asset # 将编译好的 .exe 文件作为 Release Asset 上传
         uses: actions/upload-release-asset@v1
@@ -32,6 +47,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供的用于认证的 token
         with:
           upload_url: ${{ github.event.release.upload_url }} # 上传到当前 Release 的 URL
-          asset_path: ./Main.exe # 要上传的文件的路径，与 'out' 参数一致
-          asset_name: Main.exe # Release 中显示的资产名称
-          asset_content_type: application/octet-stream # 文件内容类型
+          asset_path: ./${{ steps.create_archive_name.outputs.archive_name }} # 要上传的压缩包的路径
+          asset_name: ${{ steps.create_archive_name.outputs.archive_name }} # Release 中显示的资产名称
+          asset_content_type: application/zip # 压缩包的文件类型

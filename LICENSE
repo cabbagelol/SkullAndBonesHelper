@@ -1,0 +1,25 @@
+Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0) License
+You can use this license by saving it as a LICENSE file (without a file extension) in the root directory of your repository.
+
+License Text Summary:
+
+This license allows you to share (copy and redistribute the material in any medium or format) and adapt (remix, transform, and build upon the material) the work, provided you follow these terms:
+
+Attribution: You must give appropriate credit, provide a link to the license, and indicate if changes were made. You may do so in any reasonable manner, but not in any way that suggests the licensor endorses you or your use.
+
+NonCommercial: You may not use the material for commercial purposes.
+
+No additional restrictions: You may not apply legal terms or technological measures that legally restrict others from doing anything the license permits.
+
+Full Legal Text:
+
+You can find the full legal text at the official link below:
+https://creativecommons.org/licenses/by-nc/4.0/legalcode.en
+
+How to Use:
+
+Create a file named LICENSE (without a file extension) in the root directory of your GitHub repository.
+
+Paste the above license text (or the full text obtained from the official link) into this file.
+
+Commit and push this file to your repository. GitHub will automatically recognize and display the license.

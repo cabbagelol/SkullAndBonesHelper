@@ -9,16 +9,29 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
+    runs-on: windows-latest # 编译环境为 Windows
 
-      - name: Build
-        uses: benmusson/ahk2exe-action@v1
+    steps:
+      - name: Checkout repository # 拉取仓库代码
+        uses: actions/checkout@v4
+
+      - name: Build AutoHotkey Executable # 编译 AutoHotkey 脚本为可执行文件
+        uses: benmusson/ahk2exe-action@v1 # 使用指定的 ahk2exe Action 版本
         with:
-          in: .\Main.ahk
-          out: .\Main.exe
-          icon: .\UI_Main_Icon.ico
-          target: x64
-          ahk-tag: latest
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          in: .\Main.ahk # 输入脚本路径
+          out: .\Main.exe # 输出可执行文件路径和名称
+          icon: .\UI_Main_Icon.ico # 可选：指定图标文件路径
+          target: x64 # 编译目标架构
+          ahk-tag: latest # 使用最新版本的 AutoHotkey v1 或 v2 (根据您脚本的需求，如果您的脚本是v2，这里可能需要'v2.0-latest'或特定版本)
+          # github-token 在上传 Release Asset 时由 upload-release-asset Action 使用，
+          # 通常不需要在这里显式传递给 ahk2exe-action
+
+      - name: Upload Release Asset # 将编译好的 .exe 文件作为 Release Asset 上传
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub 自动提供的用于认证的 token
+        with:
+          upload_url: ${{ github.event.release.upload_url }} # 上传到当前 Release 的 URL
+          asset_path: ./Main.exe # 要上传的文件的路径，与 'out' 参数一致
+          asset_name: Main.exe # Release 中显示的资产名称
+          asset_content_type: application/octet-stream # 文件内容类型

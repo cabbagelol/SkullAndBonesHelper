@@ -29,16 +29,15 @@ ShowAbout(*) {
     AboutGui.Add("Text", "x20 y+5", "By cabbagelol")
 
     ; 添加检查更新按钮
-    AboutGui.Add("Button", "x20 y+20 w80 h30 Default", "检查更新").OnEvent("Click", CheckForUpdate)
+    AboutGui.Add("Button", "x20 y+20 w80 h30 Default", "检查更新").OnEvent("Click", (*) => CheckForUpdate(true))
 
     AboutGui.Show("AutoSize Center")
-
-    ; 自动检查更新
-    CheckForUpdate()
 }
 
 ; 检查更新
-CheckForUpdate(*) {
+CheckForUpdate(isTip) {
+    global config
+
     try {
         tempFile := A_Temp "\version_check.txt"
         Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/refs/heads/version/version.txt", tempFile)
@@ -46,15 +45,16 @@ CheckForUpdate(*) {
         if (FileExist(tempFile)) {
             remoteVersion := Trim(FileRead(tempFile))
             FileDelete(tempFile)
-            localVersion := IniRead(configFile, "App", "version", config["app"]["Version"])
-
+            localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
             if (CompareVersions(remoteVersion, localVersion) > 0) {
                 result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")
                 if (result = "Yes") {
                     Run("https://github.com/cabbagelol/SkullAndBonesHelper")
                 }
             } else {
-                MsgBox("当前已是最新版本。", "检查更新", "64")
+                if isTip {
+                    MsgBox("当前已是最新版本。", "检查更新", "64")
+                }
             }
         } else {
             MsgBox("无法下载版本信息文件。", "错误", "16")
@@ -66,16 +66,21 @@ CheckForUpdate(*) {
 
 ; 比较版本号函数 (格式如 1.2.3)
 CompareVersions(v1, v2) {
-    v1 := StrSplit(v1, ".")
-    v2 := StrSplit(v2, ".")
+    ; 移除可能的非数字字符
+    v1 := RegExReplace(v1, "[^\d.]")
+    v2 := RegExReplace(v2, "[^\d.]")
 
-    loop Max(v1.Length, v2.Length) {
-        n1 := v1.Has(A_Index) ? v1[A_Index] : 0
-        n2 := v2.Has(A_Index) ? v2[A_Index] : 0
+    a := StrSplit(v1, ".")
+    b := StrSplit(v2, ".")
 
-        if (n1 > n2)
+    loop Max(a.Length, b.Length) {
+        ; 将每部分转换为整数
+        num1 := a.Has(A_Index) ? Integer(a[A_Index]) : 0
+        num2 := b.Has(A_Index) ? Integer(b[A_Index]) : 0
+
+        if (num1 > num2)
             return 1
-        if (n1 < n2)
+        if (num1 < num2)
             return -1
     }
     return 0

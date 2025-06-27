@@ -61,6 +61,8 @@ try {
 
     ApplyHotkeys()
 
+    CheckForUpdate(false)
+
 } catch as e {
     MsgBox("初始化失败: " e.Message "`n在 " e.What "`n行号: " e.Line, "错误", 0x10)
     ExitApp()

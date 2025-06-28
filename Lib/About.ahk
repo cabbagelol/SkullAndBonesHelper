@@ -36,32 +36,36 @@ ShowAbout(*) {
 
 ; 检查更新
 CheckForUpdate(isTip) {
-    global config
+    SetTimer(() => _BackgroundUpdate(isTip), -1)
+}
 
-    try {
-        tempFile := A_Temp "\version_check.txt"
-        Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/refs/heads/version/version.txt", tempFile)
+_BackgroundUpdate(isTip) {
+        global config
 
-        if (FileExist(tempFile)) {
-            remoteVersion := Trim(FileRead(tempFile))
-            FileDelete(tempFile)
-            localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
-            if (CompareVersions(remoteVersion, localVersion) > 0) {
-                result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")
-                if (result = "Yes") {
-                    Run("https://github.com/cabbagelol/SkullAndBonesHelper")
+        try {
+            tempFile := A_Temp "\version_check.txt"
+            Download("https://raw.githubusercontent.com/cabbagelol/SkullAndBonesHelper/refs/heads/version/version.txt", tempFile)
+
+            if (FileExist(tempFile)) {
+                remoteVersion := Trim(FileRead(tempFile))
+                FileDelete(tempFile)
+                localVersion := IniRead(configFile, "App", "version", config["app"]["version"])
+                if (CompareVersions(remoteVersion, localVersion) > 0) {
+                    result := MsgBox("发现新版本 " remoteVersion " (当前版本 " localVersion ")`n`n是否要前往GitHub下载更新?", "更新可用", "YesNo 64")
+                    if (result = "Yes") {
+                        Run("https://github.com/cabbagelol/SkullAndBonesHelper")
+                    }
+                } else {
+                    if isTip {
+                        MsgBox("当前已是最新版本。", "检查更新", "64")
+                    }
                 }
             } else {
-                if isTip {
-                    MsgBox("当前已是最新版本。", "检查更新", "64")
-                }
+                MsgBox("无法下载版本信息文件。", "错误", "16")
             }
-        } else {
-            MsgBox("无法下载版本信息文件。", "错误", "16")
+        } catch as e {
+            MsgBox("检查更新时出错: " e.Message, "错误", "16")
         }
-    } catch as e {
-        MsgBox("检查更新时出错: " e.Message, "错误", "16")
-    }
 }
 
 ; 比较版本号函数 (格式如 1.2.3)

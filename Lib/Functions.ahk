@@ -135,12 +135,12 @@ StartAutoOpenBox() {
 
     ; 添加自定义次数输入框
     customBoxCountEdit := myAutoOpenGui.Add("Edit", "vCustomBoxCount Number Limit5 w160 Hidden", 1)
-    customBoxCountText := myAutoOpenGui.Add("Text", "x+5 Hidden", "次")
+    customBoxCountText := myAutoOpenGui.Add("Text", "x+6 Hidden", "次")
 
     ; 当下拉框选择"自定义"时显示编辑框
     boxOpenCountDdl.OnEvent("Change", (*) => (
-        customBoxCountEdit.Visible := (boxOpenCountDdl.Value == 4),
-        customBoxCountText.Visible := (boxOpenCountDdl.Value == 4)
+        customBoxCountEdit.Visible := (boxOpenCountDdl.Value == 6),
+        customBoxCountText.Visible := (boxOpenCountDdl.Value == 6)
     ))
 
     btnStartAutoOpen := myAutoOpenGui.Add("Button", "Default", "开始自动开箱")
@@ -179,6 +179,7 @@ InitiateAutoOpening(*) {
 
     if boxOpenTimes <= 0 {
         MsgBox "请输入有效的开箱次数!", "错误", 0x10
+        SetTimer(() => ToolTip(), -3000)
         return
     }
 
@@ -191,7 +192,7 @@ InitiateAutoOpening(*) {
     Sleep 1000
     ToolTip
 
-    ; 更新 lv 中的状态（假设 lv 是你的 ListView 控件）
+    ; 更新 lv 中的状态
     ; 确保 config 和 isAutoClickEnabled 也是全局可访问的或已传递。
     ; 这行可能需要根据你管理 isAutoClickEnabled 和 config 的方式进行调整。
     lv.Modify(4, "Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "开启")
@@ -205,20 +206,21 @@ InitiateAutoOpening(*) {
         ; 让我们假设 autoOpenBoxRunning 应该为 *false* 才能停止。
         if (!autoOpenBoxRunning) { ; 如果 autoOpenBoxRunning 变为 false（外部停止）
             lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
+            SetTimer(() => ToolTip(), -1000)
             break ; 跳出循环
         }
 
         ; 第一次空格
         SetKeyDelay(50, 50)
-        SendEvent("{Space}") ; 或者 SendPlay("{Space}")
+        SendEvent("{Space}")
         Sleep(1100)
 
         ; 第二次空格
-        SendEvent("{Space}") ; 或者 SendPlay("{Space}")
+        SendEvent("{Space}")
         Sleep(1100)
 
         ; 按下ESC
-        SendEvent("{Esc}") ; 或者 SendPlay("{Esc}")
+        SendEvent("{Esc}")
         Sleep(500)
 
         ; 显示进度

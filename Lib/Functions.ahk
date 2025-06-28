@@ -1,5 +1,36 @@
 ; Lib\Functions.ahk
 
+; --- 自动左键 ---
+global configFile, config
+~$LButton:: {
+    global isAutoClickEnabled, config
+
+    if !isAutoClickEnabled
+        return
+
+    local currentDownDelay := config["delays"]["down"]
+    local currentUpDelay := config["delays"]["up"]
+
+    while GetKeyState("LButton", "P") {
+        Click("Down")
+        Sleep(currentDownDelay)
+        Click("Up")
+        Sleep(currentUpDelay)
+    }
+}
+
+if IniRead(configFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"]) {
+    Alt:: {
+        isAutoClickLSEnabled := true
+
+        while (GetKeyState("Space", "P")) {
+            Sleep 10
+        }
+
+        isAutoClickLSEnabled := false
+    }
+}
+
 ; --- 计时器功能 ---
 ; 开始计时
 StartTimer(duration) {

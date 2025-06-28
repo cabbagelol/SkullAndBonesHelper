@@ -20,12 +20,14 @@ global config := Map(
         "up", 150
     ),
    "app", Map(
-        "version", "0.0.0"
+        "version", "0.0.0",
+        "isAutoClickAltStopEnabled", true
     ),
 )
 
 ; 功能状态变量
 global isAutoClickEnabled := false
+global isAutoClickLSEnabled := false
 global isAutoOpenBoxEnabled := false
 global autoOpenBoxRunning := false
 global timerRunning := false
@@ -62,25 +64,7 @@ try {
     ApplyHotkeys()
 
     CheckForUpdate(false)
-
 } catch as e {
     MsgBox("初始化失败: " e.Message "`n在 " e.What "`n行号: " e.Line, "错误", 0x10)
     ExitApp()
-}
-
-~$LButton:: {
-    global isAutoClickEnabled, config
-
-    if !isAutoClickEnabled
-        return
-
-    local currentDownDelay := config["delays"]["down"]
-    local currentUpDelay := config["delays"]["up"]
-
-    while GetKeyState("LButton", "P") {
-        Click("Down")
-        Sleep(currentDownDelay)
-        Click("Up")
-        Sleep(currentUpDelay)
-    }
 }

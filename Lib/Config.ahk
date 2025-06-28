@@ -13,6 +13,9 @@ LoadConfig() {
 
             config["delays"]["down"] := IniRead(configFile, "Delays", "Down", config["delays"]["down"])
             config["delays"]["up"] := IniRead(configFile, "Delays", "Up", config["delays"]["up"])
+
+            config["app"]["version"] := IniRead(configFile, "App", "Version", config["app"]["version"])
+            config["app"]["isAutoClickAltStopEnabled"] := IniRead(configFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"])
         } catch {
             FileDelete(configFile)
             MsgBox("配置文件加载失败或已损坏，已重置为默认设置。", "警告", 0x30)
@@ -34,7 +37,7 @@ SaveConfig() {
         IniWrite(config["delays"]["up"], configFile, "Delays", "Up")
 
         IniWrite(config["app"]["version"], configFile, "App", "Version")
-
+        IniWrite(config["app"]["isAutoClickAltStopEnabled"], configFile, "App", "IsAutoClickAltStopEnabled")
     } catch as e {
         MsgBox("保存配置失败: " e.Message, "错误", 0x10)
     }

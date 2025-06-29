@@ -82,6 +82,7 @@ StopTimer() {
 
 ; --- 防踢功能 ---
 global boxOpenCountDdl        ; 开箱次数下拉列表控件
+global boxOpenModeDdl         ; 开箱模式
 global customBoxCountEdit     ; 自定义次数输入框控件
 global customBoxCountText    ; 自定义次数文本标签控件
 
@@ -117,9 +118,10 @@ SendRandomKey() {
 
 ; --- 自动打开箱子
 global myAutoOpenGui := ""
+openBoxMode := 0
 ; 启动自动开箱功能的入口
 StartAutoOpenBox() {
-    global boxOpenCountDdl, customBoxCountEdit, customBoxCountText
+    global boxOpenCountDdl,boxOpenModeDdl, customBoxCountEdit, customBoxCountText
     global myAutoOpenGui
 
     ; 检查是否已经有一个 GUI 实例存在并且没有被销毁
@@ -132,6 +134,8 @@ StartAutoOpenBox() {
     myAutoOpenGui.Title := "自动开箱设置"
     myAutoOpenGui.Add("Text",, "选择开箱次数:")
     boxOpenCountDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenCountChoice Choose1", ["3次", "10次", "100次", "500次" ,"1000次", "自定义"])
+    myAutoOpenGui.Add("Text",, "开箱模式:")
+    boxOpenModeDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenModeChoice Choose2", ["船仓", "仓库(推荐)"])
 
     ; 添加自定义次数输入框
     customBoxCountEdit := myAutoOpenGui.Add("Edit", "vCustomBoxCount Number Limit5 w160 Hidden", 1)
@@ -210,18 +214,23 @@ InitiateAutoOpening(*) {
             break ; 跳出循环
         }
 
-        ; 第一次空格
         SetKeyDelay(50, 50)
+
+        ; 第一次空格
         SendEvent("{Space}")
-        Sleep(1100)
+        Sleep(800)
+
+        if boxOpenModeDdl.Value == 2 {
+          SendEvent("{S}")
+          Sleep(50)
+        }
 
         ; 第二次空格
         SendEvent("{Space}")
-        Sleep(1100)
+        Sleep(800)
 
         ; 按下ESC
         SendEvent("{Esc}")
-        Sleep(500)
 
         ; 显示进度
         lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], A_Index "/" boxOpenTimes)

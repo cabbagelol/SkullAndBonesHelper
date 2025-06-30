@@ -2,10 +2,12 @@
 
 name: AutoHotkey Build and Release
 
-# 定义触发工作流的事件
 on:
+  push:
+    tags:
+      - 'v*'
   release:
-    types: [published] # 当有新的 GitHub Release 被“发布”时触发
+    types: [published]
 
 jobs:
   build:

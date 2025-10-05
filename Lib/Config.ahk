@@ -13,6 +13,7 @@ LoadConfig() {
 
             config["delays"]["down"] := IniRead(configFile, "Delays", "Down", config["delays"]["down"])
             config["delays"]["up"] := IniRead(configFile, "Delays", "Up", config["delays"]["up"])
+            config["delays"]["autoClickModel"] := IniRead(configFile, "Delays", "AutoClickModel", config["delays"]["autoClickModel"])
 
             config["app"]["version"] := IniRead(configFile, "App", "Version", config["app"]["version"])
             config["app"]["isAutoClickAltStopEnabled"] := IniRead(configFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"])
@@ -35,6 +36,7 @@ SaveConfig() {
 
         IniWrite(config["delays"]["down"], configFile, "Delays", "Down")
         IniWrite(config["delays"]["up"], configFile, "Delays", "Up")
+        IniWrite(config["delays"]["autoClickModel"], configFile, "Delays", "AutoClickModel")
 
         IniWrite(config["app"]["version"], configFile, "App", "Version")
         IniWrite(config["app"]["isAutoClickAltStopEnabled"], configFile, "App", "IsAutoClickAltStopEnabled")

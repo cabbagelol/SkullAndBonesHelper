@@ -1,4 +1,4 @@
-; Main.ahk
+; Main.ahk 1
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 #Warn All, Off
@@ -17,7 +17,8 @@ global config := Map(
     ),
     "delays", Map(
         "down", 50,
-        "up", 150
+        "up", 150,
+        "autoClickModel", 1
     ),
    "app", Map(
         "version", "0.0.0",
@@ -29,6 +30,7 @@ global config := Map(
 global isAutoClickEnabled := false
 global isAutoClickLSEnabled := false
 global isAutoOpenBoxEnabled := false
+global isAutoClickToggleModeEnabled := false
 global autoOpenBoxRunning := false
 global timerRunning := false
 global timerEndTime := 0
@@ -63,7 +65,7 @@ try {
 
     ApplyHotkeys()
 
-    CheckForUpdate(false)
+    ;CheckForUpdate(false)
 } catch as e {
     MsgBox("初始化失败: " e.Message "`n在 " e.What "`n行号: " e.Line, "错误", 0x10)
     ExitApp()

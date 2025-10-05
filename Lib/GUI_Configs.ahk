@@ -19,17 +19,24 @@ ShowDelayConfig() {
     upEdit := delayGui.Add("Edit", "x100 y66 w60 Number", config["delays"]["up"])
     delayGui.Add("UpDown", "Range1-1000", config["delays"]["up"])
 
-    delayGui.Add("Button", "x20 y120 w80 Default", "保存").OnEvent("Click", (*) => SaveDelaySettings_Handler(downEdit, upEdit, delayGui))
+    delayGui.Add("Text", "x10 y120", "模式")
+    delayGui.Add("Text", "x10 y140 c535353", "触发模式: (1)按住重复触发 (2)按下切换重复触发")
 
-    delayGui.Add("Button", "x150 y120 w80", "取消").OnEvent("Click", (*) => delayGui.Destroy())
-    delayGui.Show("Center h160")
+    modelEdit := delayGui.Add("Edit", "x100 y118 w50 Number", config["delays"]["autoClickModel"])
+    delayGui.Add("UpDown", "Range1-1000", config["delays"]["autoClickModel"])
+
+    delayGui.Add("Button", "x20 y170 w80 Default", "保存").OnEvent("Click", (*) => SaveDelaySettings_Handler(downEdit, upEdit, delayGui, modelEdit))
+    delayGui.Add("Button", "x150 y170 w80", "取消").OnEvent("Click", (*) => delayGui.Destroy())
+
+    delayGui.Show("Center h200")
 }
 
-SaveDelaySettings_Handler(downEdit, upEdit, currentDelayGui) {
+SaveDelaySettings_Handler(downEdit, upEdit, currentDelayGui,modelEdit) {
     global config, lv
 
     config["delays"]["down"] := downEdit.Value
     config["delays"]["up"] := upEdit.Value
+    config["delays"]["autoClickModel"] := modelEdit.Value
     SaveConfig() ; 调用 Lib\Config.ahk 中的函数
     currentDelayGui.Destroy()
     MsgBox("延迟设置已保存！", "提示", 0x40)

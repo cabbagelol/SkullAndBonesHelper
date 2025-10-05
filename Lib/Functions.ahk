@@ -2,21 +2,69 @@
 
 ; --- 自动左键 ---
 global configFile, config
+IniRead(configFile, "Delays", "AutoClickModel", config["delays"]["autoClickModel"])
+
 ~$LButton:: {
     global isAutoClickEnabled, config
 
-    if !isAutoClickEnabled
-        return
+    if (isAutoClickEnabled && config["delays"]["autoClickModel"] = 1) {
+        ; 模式1：按住触发
+        HandleHoldMode()
+    } else if (isAutoClickEnabled && config["delays"]["autoClickModel"] = 2) {
+        ; 模式2：切换触发
+        HandleToggleMode()
+    }
+}
+
+; 模式1：按住触发
+HandleHoldMode() {
+    global isAutoClickEnabled, config
 
     local currentDownDelay := config["delays"]["down"]
     local currentUpDelay := config["delays"]["up"]
 
     while GetKeyState("LButton", "P") {
-        Click("Down")
+        Send "{LButton down}"
         Sleep(currentDownDelay)
-        Click("Up")
+        Send "{LButton up}"
         Sleep(currentUpDelay)
     }
+}
+
+; 模式2：切换触发
+HandleToggleMode() {
+    global isAutoClickToggleModeEnabled
+
+    ; 切换状态
+    isAutoClickToggleModeEnabled := !isAutoClickToggleModeEnabled
+    
+    if (isAutoClickToggleModeEnabled) {
+        ; 启动自动点击
+        SetTimer(AutoClick, 10)  ; 立即开始，然后按配置间隔执行
+    }
+    if (!isAutoClickToggleModeEnabled || !isAutoClickEnabled) {
+        ; 停止自动点击
+        SetTimer(AutoClick, 0)  ; 关闭定时器
+    }
+}
+
+AutoClick() {
+    global config, isAutoClickToggleModeEnabled
+
+    if (!isAutoClickEnabled) {
+        ; 关闭定时器
+        SetTimer(AutoClick, 0)  
+        ; 切换状态
+        isAutoClickToggleModeEnabled := !isAutoClickToggleModeEnabled
+    }
+    
+    local currentDownDelay := config["delays"]["down"]
+    local currentUpDelay := config["delays"]["up"]
+    
+    Send "{LButton down}"
+    Sleep(currentDownDelay)
+    Send "{LButton up}"
+    Sleep(currentUpDelay)
 }
 
 if IniRead(configFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"]) {

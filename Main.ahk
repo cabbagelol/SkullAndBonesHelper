@@ -5,25 +5,30 @@
 
 ; --- Global Variables and Configuration ---
 ; 配置文件路径 1
-configFile := A_ScriptDir "\config.ini"
+userConfigFile := A_ScriptDir "\user.config.ini"
+appConfigFile := A_ScriptDir "\app.config.ini"
 
 ; 默认配置
 global config := Map(
-    "hotkeys", Map(
-        "autoClick", "F1",
-        "autoOpenBox", "F4",
-        "timer", "F2",
-        "antiKick", "F3"
-    ),
-    "delays", Map(
-        "down", 50,
-        "up", 150,
-        "autoClickModel", 1
-    ),
-   "app", Map(
-        "version", "0.0.0",
-        "isAutoClickAltStopEnabled", true
-    ),
+"hotkeys", Map(
+"autoClick", "F1",
+"autoOpenBox", "F4",
+"timer", "F2",
+"antiKick", "F3",
+"pasteChat", "F5",
+"defense", "F7"
+),
+"delays", Map(
+"down", 50,
+"up", 150,
+"autoClickModel", 1,
+"defensePause", 4
+),
+"app", Map(
+"version", "0.0.0",
+"isAutoClickAltStopEnabled", true,
+"isInitialCheckVersion", true
+),
 )
 
 ; 功能状态变量
@@ -36,6 +41,8 @@ global timerRunning := false
 global timerEndTime := 0
 global isRandomKeyEnabled := false
 global randomKeyTimer := 0
+global isPasteChatEnabled := false
+global isDefenseEnabled := false
 
 ; GUI句柄 (用于在不同函数中访问GUI控件)
 global MainGui
@@ -44,6 +51,7 @@ global delayGui := 0 ; 全局初始化 GUI 句柄以管理其状态
 global timerGui := 0
 global antiKickGui := 0
 global configGui := 0
+global defenseGui := 0
 global AboutGui := 0 ; 也全局化 AboutGui 以管理其状态
 
 ; --- Import Modules ---
@@ -65,7 +73,9 @@ try {
 
     ApplyHotkeys()
 
-    ;CheckForUpdate(false)
+    if config["app"]["isInitialCheckVersion"] {
+        CheckForUpdate(false)
+    }
 } catch as e {
     MsgBox("初始化失败: " e.Message "`n在 " e.What "`n行号: " e.Line, "错误", 0x10)
     ExitApp()

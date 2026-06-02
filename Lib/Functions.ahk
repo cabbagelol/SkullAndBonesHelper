@@ -1,8 +1,8 @@
 ; Lib\Functions.ahk
 
 ; --- 自动左键 ---
-global configFile, config
-IniRead(configFile, "Delays", "AutoClickModel", config["delays"]["autoClickModel"])
+global userConfigFile, appConfigFile, config
+IniRead(userConfigFile, "Delays", "AutoClickModel", config["delays"]["autoClickModel"])
 
 ~$LButton:: {
     global isAutoClickEnabled, config
@@ -37,14 +37,14 @@ HandleToggleMode() {
 
     ; 切换状态
     isAutoClickToggleModeEnabled := !isAutoClickToggleModeEnabled
-    
+
     if (isAutoClickToggleModeEnabled) {
         ; 启动自动点击
-        SetTimer(AutoClick, 10)  ; 立即开始，然后按配置间隔执行
+        SetTimer(AutoClick, 10) ; 立即开始，然后按配置间隔执行
     }
     if (!isAutoClickToggleModeEnabled || !isAutoClickEnabled) {
         ; 停止自动点击
-        SetTimer(AutoClick, 0)  ; 关闭定时器
+        SetTimer(AutoClick, 0) ; 关闭定时器
     }
 }
 
@@ -53,21 +53,21 @@ AutoClick() {
 
     if (!isAutoClickEnabled) {
         ; 关闭定时器
-        SetTimer(AutoClick, 0)  
+        SetTimer(AutoClick, 0)
         ; 切换状态
         isAutoClickToggleModeEnabled := !isAutoClickToggleModeEnabled
     }
-    
+
     local currentDownDelay := config["delays"]["down"]
     local currentUpDelay := config["delays"]["up"]
-    
+
     Send "{LButton down}"
     Sleep(currentDownDelay)
     Send "{LButton up}"
     Sleep(currentUpDelay)
 }
 
-if IniRead(configFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"]) {
+if IniRead(appConfigFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"]) {
     Alt:: {
         isAutoClickLSEnabled := true
 
@@ -93,7 +93,8 @@ StartTimer(duration) {
     timerRunning := true
     SetTimer(UpdateTimer, 1000) ; 每秒更新
 
-    lv.Modify(2, "Check", "计时器", config["hotkeys"]["timer"], "运行中")
+    if (row := GetRowIndexByFunctionName("计时器"))
+        lv.Modify(row, "Check", "计时器", config["hotkeys"]["timer"], "运行中")
     ToolTip("计时器已启动。", 10, 30)
 }
 
@@ -107,13 +108,15 @@ UpdateTimer() {
         SetTimer(UpdateTimer, 0) ; 停止计时器
         SoundPlay("*64") ; 计时器结束时播放声音
 
-        lv.Modify(2, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
+        if (row := GetRowIndexByFunctionName("计时器"))
+            lv.Modify(row, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
         ToolTip() ; 清除提示
         return
     }
 
     seconds := Floor(remaining / 1000)
-    lv.Modify(2,"Check", "计时器", config["hotkeys"]["timer"],seconds "秒") ; 更新 ListView 显示剩余秒数
+    if (row := GetRowIndexByFunctionName("计时器"))
+        lv.Modify(row, "Check", "计时器", config["hotkeys"]["timer"], seconds "秒") ; 更新 ListView 显示剩余秒数
     ToolTip("倒计时: " seconds "秒", 10, 30)
 }
 
@@ -123,16 +126,17 @@ StopTimer() {
     timerRunning := false
     SetTimer(UpdateTimer, 0) ; 停止计时器更新
 
-    lv.Modify(2, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
+    if (row := GetRowIndexByFunctionName("计时器"))
+        lv.Modify(row, "-Check", "计时器", config["hotkeys"]["timer"], "关闭")
 
     ToolTip() ; 清除提示
 }
 
 ; --- 防踢功能 ---
-global boxOpenCountDdl        ; 开箱次数下拉列表控件
-global boxOpenModeDdl         ; 开箱模式
-global customBoxCountEdit     ; 自定义次数输入框控件
-global customBoxCountText    ; 自定义次数文本标签控件
+global boxOpenCountDdl ; 开箱次数下拉列表控件
+global boxOpenModeDdl ; 开箱模式
+global customBoxCountEdit ; 自定义次数输入框控件
+global customBoxCountText ; 自定义次数文本标签控件
 
 ; 启动防踢
 StartAntiKick(interval) {
@@ -145,8 +149,9 @@ StartAntiKick(interval) {
     isRandomKeyEnabled := true
     randomKeyTimer := SetTimer(SendRandomKey, interval)
 
-    lv.Modify(3, "Check", "防踢状态", config["hotkeys"]["antiKick"], "开启")
-    ToolTip("防踢模式已启动。", 10, 50)
+    if (row := GetRowIndexByFunctionName("防踢状态"))
+        lv.Modify(row, "Check", "防踢状态", config["hotkeys"]["antiKick"], "开启")
+    ToolTip("防踢模式已启动", 10, 50)
 }
 
 ; 发送随机按键
@@ -156,7 +161,7 @@ SendRandomKey() {
     if !isRandomKeyEnabled
         return
 
-    randomKey := Random(1, 2) = 1 ? "a" : "d"
+    randomKey := Random(1, 2) = 1 ? "%" : "+"
     SendEvent("{" randomKey " down}")
     Sleep(50)
     SendEvent("{" randomKey " up}")
@@ -166,31 +171,32 @@ SendRandomKey() {
 
 ; --- 自动打开箱子
 global myAutoOpenGui := ""
-; 启动自动开箱功能的入口
+/*
+ * 启动自动开箱功能的入口配置界面
+ * 检查是否存在已有的配置窗口，如果没有则创建包含模式选择和次数自定义的 GUI 并显示。
+*/
 StartAutoOpenBox() {
-    global boxOpenCountDdl,boxOpenModeDdl, customBoxCountEdit, customBoxCountText
+    global boxOpenCountDdl, boxOpenModeDdl, customBoxCountEdit, customBoxCountText
     global myAutoOpenGui
 
-    ; 检查是否已经有一个 GUI 实例存在并且没有被销毁
     if IsObject(myAutoOpenGui) && myAutoOpenGui.Hwnd {
-        myAutoOpenGui.Show() ; 如果已存在，直接显示并激活它
+        myAutoOpenGui.Show()
         return
     }
 
     myAutoOpenGui := Gui()
     myAutoOpenGui.Title := "自动开箱设置"
 
-    myAutoOpenGui.Add("Text",, "开箱模式:")
+    myAutoOpenGui.Add("Text", , "开箱模式:")
     boxOpenModeDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenModeChoice Choose2", ["船仓", "仓库(推荐)"])
 
-    myAutoOpenGui.Add("Text",, "选择开箱次数:")
-    boxOpenCountDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenCountChoice Choose1", ["3次", "10次", "100次", "500次" ,"1000次", "自定义"])
+    myAutoOpenGui.Add("Text", , "选择开箱次数:")
+    boxOpenCountDdl := myAutoOpenGui.Add("DropDownList", "vBoxOpenCountChoice Choose1", ["3次", "10次", "100次", "500次",
+        "1000次", "自定义"])
 
-    ; 添加自定义次数输入框
     customBoxCountEdit := myAutoOpenGui.Add("Edit", "vCustomBoxCount Number Limit5 w160 Hidden", 1)
     customBoxCountText := myAutoOpenGui.Add("Text", "x+6 Hidden", "次")
 
-    ; 当下拉框选择"自定义"时显示编辑框
     boxOpenCountDdl.OnEvent("Change", (*) => (
         customBoxCountEdit.Visible := (boxOpenCountDdl.Value == 6),
         customBoxCountText.Visible := (boxOpenCountDdl.Value == 6)
@@ -202,20 +208,20 @@ StartAutoOpenBox() {
     myAutoOpenGui.Show()
 }
 
-; 实际执行自动开箱操作的函数
+/*
+ * 自动开箱的具体任务执行方法
+ * 解析用户在 GUI 中设置的开箱次数，给出3秒倒计时准备，
+ * 然后通过循环执行特定的模拟键盘输入（Space, S, ESC）完成连续开箱动作。
+ * 在循环过程或结束时同步更新主界面状态与气泡提示。
+*/
 InitiateAutoOpening(*) {
     global autoOpenBoxRunning, boxOpenCountDdl, lv, customBoxCountEdit, myAutoOpenGui
 
-    ; 重置停止标志（这可能应该设置为 true 以指示它正在运行）
-    ; 你当前将 autoOpenBoxRunning 设置为 false，这将立即中断循环。
-    ; 它应该在自动打开过程开始时设置为 true。
     autoOpenBoxRunning := true
 
-    ; 直接从下拉列表控件获取其当前的索引值
     selectedBoxCountIndex := boxOpenCountDdl.Value
     boxOpenTimes := 0
 
-    ; 根据选择确定执行次数
     switch selectedBoxCountIndex {
         case 1: boxOpenTimes := 3
         case 2: boxOpenTimes := 10
@@ -223,11 +229,11 @@ InitiateAutoOpening(*) {
         case 4: boxOpenTimes := 500
         case 5: boxOpenTimes := 1000
         case 6:
-        try {
-            boxOpenTimes := Integer(customBoxCountEdit.Value)
-        } catch {
-            Return
-        }
+            try {
+                boxOpenTimes := Integer(customBoxCountEdit.Value)
+            } catch {
+                return
+            }
     }
 
     if boxOpenTimes <= 0 {
@@ -236,7 +242,6 @@ InitiateAutoOpening(*) {
         return
     }
 
-    ; 延迟3秒让用户准备
     ToolTip "3秒后开始自动开箱，请切换到目标窗口...", 0, 0
     Sleep 1000
     ToolTip "2秒后开始自动开箱，请切换到目标窗口...", 0, 0
@@ -245,54 +250,103 @@ InitiateAutoOpening(*) {
     Sleep 1000
     ToolTip
 
-    ; 更新 lv 中的状态
-    ; 确保 config 和 isAutoClickEnabled 也是全局可访问的或已传递。
-    ; 这行可能需要根据你管理 isAutoClickEnabled 和 config 的方式进行调整。
-    lv.Modify(4, "Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "开启")
+    if (row := GetRowIndexByFunctionName("自动打开箱子"))
+        lv.Modify(row, "Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "开启")
 
-    ; 执行模拟操作
-    Loop boxOpenTimes {
-        ; 在每次操作前检查停止标志（此检查应针对 *停止* 信号）
-        ; 你当前的逻辑是在 autoOpenBoxRunning 为 true 时中断，这意味着它正在运行。
-        ; 你需要一个单独的停止标志，或者反转这个逻辑。
-        ; 例如，引入一个 `stopAutoOpen := false` 全局变量。
-        ; 让我们假设 autoOpenBoxRunning 应该为 *false* 才能停止。
-        if (!autoOpenBoxRunning) { ; 如果 autoOpenBoxRunning 变为 false（外部停止）
-            lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
+    loop boxOpenTimes {
+        if (!autoOpenBoxRunning) {
+            if (row := GetRowIndexByFunctionName("自动打开箱子"))
+                lv.Modify(row, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
             SetTimer(() => ToolTip(), -1000)
-            break ; 跳出循环
+            break
         }
 
         SetKeyDelay(50, 50)
 
-        ; 第一次空格
         SendEvent("{Space}")
         Sleep(550)
 
         if boxOpenModeDdl.Value == 2 {
-          SendEvent("{S}")
-          Sleep(50)
+            SendEvent("{S}")
+            Sleep(50)
         }
 
-        ; 第二次空格
         SendEvent("{Space}")
         Sleep(550)
 
-        ; 按下ESC
         SendEvent("{Esc}")
         Sleep(1000)
 
-        ; 显示进度
-        lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], A_Index "/" boxOpenTimes)
+        if (row := GetRowIndexByFunctionName("自动打开箱子"))
+            lv.Modify(row, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], A_Index "/" boxOpenTimes)
         ToolTip("进度:" A_Index "/" boxOpenTimes, 10, 30)
 
-        ; 如果已经达到设定的次数，且没有被停止，就显示完成
-        if (A_Index = boxOpenTimes && autoOpenBoxRunning) { ; 检查是否仍在运行
-            lv.Modify(4, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
+        if (A_Index = boxOpenTimes && autoOpenBoxRunning) {
+            if (row := GetRowIndexByFunctionName("自动打开箱子"))
+                lv.Modify(row, "-Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], "关闭")
             ToolTip("自动开箱完成!", 10, 30)
             SetTimer(() => ToolTip(), -3000)
         }
     }
 
-    autoOpenBoxRunning := false ; 确保循环完成后重置
+    autoOpenBoxRunning := false
 }
+
+; --- 间歇防御功能 ---
+RunDefense() {
+    global isDefenseEnabled, config
+    if (!isDefenseEnabled) {
+        SetTimer(RunDefense, 0)
+        return
+    }
+
+    SetKeyDelay(50, 50)
+
+    Send "{Space down}"
+
+    pauseTime := config["delays"]["defensePause"] * 1000
+
+    ; 分段 Sleep (100ms 一次)，以便能瞬间响应用户的“关闭”操作，防止界面无响应或游戏操作粘连
+    loopCount := Floor(pauseTime / 100)
+    loop loopCount {
+        if (!isDefenseEnabled) {
+            Send "{Space up}"
+            return
+        }
+        Sleep(100)
+    }
+
+    Send "{Space up}"
+
+    ; 组合间隔 0.5s
+    loop 5 {
+        if (!isDefenseEnabled)
+            return
+        Sleep(100)
+    }
+}
+
+; --- 粘贴聊天功能 ---
+#HotIf isPasteChatEnabled and (WinActive("ahk_exe skullandbones.exe") or WinActive("Skull and Bones"))
+~^c:: {
+    Sleep(100) ; 等待系统复制完成
+    ToolTip("已准备模拟粘贴: " SubStr(A_Clipboard, 1, 20) (StrLen(A_Clipboard) > 20 ? "..." : ""), 10, 50)
+    SetTimer(() => ToolTip(), -2000)
+}
+
+^v:: {
+    clipText := A_Clipboard
+    if (clipText = "") {
+        ToolTip("剪切板为空", 10, 50)
+        SetTimer(() => ToolTip(), -2000)
+        return
+    }
+
+    ToolTip("正在模拟打字输出...", 10, 50)
+    SetTimer(() => ToolTip(), -2000)
+
+    ; 模拟打字过程
+    SetKeyDelay(50, 50) ; 设置按键延迟，适应游戏接收
+    SendEvent("{Text}" clipText)
+}
+#HotIf

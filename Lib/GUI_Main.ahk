@@ -2,7 +2,7 @@
 
 ; 创建主GUI
 CreateMainGui() {
-    global config, MainGui, lv
+    global config, MainGui, lv, appConfigFile
 
     ; 设置托盘图标
     if FileExist("UI_Main_Icon.ico") {
@@ -19,6 +19,8 @@ CreateMainGui() {
     FunMenu.Add("&计时器 " config["hotkeys"]["timer"], (*) => ToggleTimer())
     FunMenu.Add("&防踢状态 " config["hotkeys"]["antiKick"], (*) => ToggleAntiKick())
     FunMenu.Add("&自动打开箱子 " config["hotkeys"]["autoOpenBox"], (*) => ToggleAutoOpenBox())
+    FunMenu.Add("&粘贴聊天 " config["hotkeys"]["pasteChat"], (*) => TogglePasteChat())
+    FunMenu.Add("&间歇防御 " config["hotkeys"]["defense"], (*) => ToggleDefense())
 
     HelpMenu := Menu()
     HelpMenu.Add("&关于", (*) => ShowAbout())
@@ -30,7 +32,7 @@ CreateMainGui() {
     ; 创建主窗口
     MainGui := Gui()
     MainGui.MenuBar := MainMenu
-    MainGui.Title := IniRead(configFile, "App", "version", config["app"]["version"])
+    MainGui.Title := IniRead(appConfigFile, "App", "version", config["app"]["version"])
     local transparentColor := "F2F2F2"
     MainGui.BackColor := transparentColor
     MainGui.OnEvent("Close", (*) => ExitApp())
@@ -66,7 +68,7 @@ CreateMainGui() {
 
 ; 更新ListView中功能列表的显示
 UpdateFunctionList() {
-    global config, isAutoClickEnabled ,isAutoOpenBoxEnabled , timerRunning, isRandomKeyEnabled, lv
+    global config, isAutoClickEnabled ,isAutoOpenBoxEnabled , timerRunning, isRandomKeyEnabled, isPasteChatEnabled, isDefenseEnabled, lv
 
     lv.Delete() ; AutoHotkey v2 中清除所有项目的正确方法
 
@@ -86,15 +88,32 @@ UpdateFunctionList() {
     lv.Add("Check", "自动打开箱子", config["hotkeys"]["autoOpenBox"], isAutoOpenBoxEnabled ? "开启" : "关闭")
     if isAutoOpenBoxEnabled
         lv.Modify(4, "Check")
+
+    lv.Add("Check", "粘贴聊天", config["hotkeys"]["pasteChat"], isPasteChatEnabled ? "开启" : "关闭")
+    if isPasteChatEnabled
+        lv.Modify(5, "Check")
+
+    lv.Add("Check", "间歇防御", config["hotkeys"]["defense"], isDefenseEnabled ? "停顿" config["delays"]["defensePause"] "s" : "关闭")
+    if isDefenseEnabled
+        lv.Modify(6, "Check")
 }
 
 ; 更新ListView中的快捷键显示
+; 更新ListView中的快捷键显示
 UpdateListViewHotkeys() {
     global lv, config
-    lv.Modify(1,,, config["hotkeys"]["autoClick"])
-    lv.Modify(2,,, config["hotkeys"]["timer"])
-    lv.Modify(3,,, config["hotkeys"]["antiKick"])
-    lv.Modify(4,,, config["hotkeys"]["autoOpenBox"])
+    if (row := GetRowIndexByFunctionName("左键自动"))
+        lv.Modify(row,,, config["hotkeys"]["autoClick"])
+    if (row := GetRowIndexByFunctionName("计时器"))
+        lv.Modify(row,,, config["hotkeys"]["timer"])
+    if (row := GetRowIndexByFunctionName("防踢状态"))
+        lv.Modify(row,,, config["hotkeys"]["antiKick"])
+    if (row := GetRowIndexByFunctionName("自动打开箱子"))
+        lv.Modify(row,,, config["hotkeys"]["autoOpenBox"])
+    if (row := GetRowIndexByFunctionName("粘贴聊天"))
+        lv.Modify(row,,, config["hotkeys"]["pasteChat"])
+    if (row := GetRowIndexByFunctionName("间歇防御"))
+        lv.Modify(row,,, config["hotkeys"]["defense"])
 }
 
 ; 配置功能 (决定显示哪个配置GUI)
@@ -114,5 +133,21 @@ ConfigureFunction(lv_ctrl) {
         case "防踢状态":
             ShowAntiKickConfig()
         case "自动打开箱子":
+        case "粘贴聊天":
+        case "间歇防御":
+            ShowDefenseConfig()
     }
+}
+
+; 根据功能名称获取 ListView 中的行索引
+GetRowIndexByFunctionName(funcName) {
+    global lv
+    if (!IsSet(lv) || !lv)
+        return 0
+    Loop lv.GetCount() {
+        if (lv.GetText(A_Index, 1) = funcName) {
+            return A_Index
+        }
+    }
+    return 0
 }

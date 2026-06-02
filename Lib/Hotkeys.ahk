@@ -8,6 +8,8 @@ ApplyHotkeys() {
     try Hotkey(config["hotkeys"]["autoOpenBox"], "Off")
     try Hotkey(config["hotkeys"]["timer"], "Off")
     try Hotkey(config["hotkeys"]["antiKick"], "Off")
+    try Hotkey(config["hotkeys"]["pasteChat"], "Off")
+    try Hotkey(config["hotkeys"]["defense"], "Off")
 
     if (IsValidHotkey(config["hotkeys"]["autoClick"], ["LButton"])) {
         try Hotkey("$" config["hotkeys"]["autoClick"], ToggleAutoClick, "On")
@@ -27,6 +29,14 @@ ApplyHotkeys() {
 
     if (IsValidHotkey(config["hotkeys"]["antiKick"])) {
         try Hotkey("$" config["hotkeys"]["antiKick"], ToggleAntiKick, "On")
+    }
+
+    if (IsValidHotkey(config["hotkeys"]["pasteChat"])) {
+        try Hotkey("$" config["hotkeys"]["pasteChat"], TogglePasteChat, "On")
+    }
+
+    if (IsValidHotkey(config["hotkeys"]["defense"])) {
+        try Hotkey("$" config["hotkeys"]["defense"], ToggleDefense, "On")
     }
 }
 
@@ -55,7 +65,8 @@ ToggleAutoClick(*) {
     global isAutoClickEnabled, lv, config
     isAutoClickEnabled := !isAutoClickEnabled
 
-    lv.Modify(1, isAutoClickEnabled ? "Check" : "-Check", "左键自动", config["hotkeys"]["autoClick"], isAutoClickEnabled ? "开启" : "关闭")
+    if (row := GetRowIndexByFunctionName("左键自动"))
+        lv.Modify(row, isAutoClickEnabled ? "Check" : "-Check", "左键自动", config["hotkeys"]["autoClick"], isAutoClickEnabled ? "开启" : "关闭")
 
     ToolTip("左键自动: " (isAutoClickEnabled ? "开" : "关"), 10, 10)
     SetTimer(() => ToolTip(), -3000)
@@ -83,7 +94,8 @@ ToggleAntiKick(*) {
             SetTimer(randomKeyTimer, 0)
             randomKeyTimer := 0
         }
-        lv.Modify(3, "-Check", "防踢状态", config["hotkeys"]["antiKick"], "关闭")
+        if (row := GetRowIndexByFunctionName("防踢状态"))
+            lv.Modify(row, "-Check", "防踢状态", config["hotkeys"]["antiKick"], "关闭")
         ToolTip("防踢模式已关闭", 10, 50)
         SetTimer(() => ToolTip(), -1000)
     }
@@ -99,5 +111,36 @@ ToggleAutoOpenBox(*) {
     } else {
         StartAutoOpenBox()
         autoOpenBoxRunning := true
+    }
+}
+
+; 切换粘贴聊天
+TogglePasteChat(*) {
+    global isPasteChatEnabled, lv, config
+    isPasteChatEnabled := !isPasteChatEnabled
+
+    if (row := GetRowIndexByFunctionName("粘贴聊天"))
+        lv.Modify(row, isPasteChatEnabled ? "Check" : "-Check", "粘贴聊天", config["hotkeys"]["pasteChat"], isPasteChatEnabled ? "开启" : "关闭")
+
+    ToolTip("粘贴聊天: " (isPasteChatEnabled ? "开" : "关"), 10, 50)
+    SetTimer(() => ToolTip(), -3000)
+}
+
+; 切换间歇防御
+ToggleDefense(*) {
+    global isDefenseEnabled, lv, config
+    isDefenseEnabled := !isDefenseEnabled
+
+    if (row := GetRowIndexByFunctionName("间歇防御"))
+        lv.Modify(row, isDefenseEnabled ? "Check" : "-Check", "间歇防御", config["hotkeys"]["defense"], isDefenseEnabled ? "停顿" config["delays"]["defensePause"] "s" : "关闭")
+
+    ToolTip("间歇防御: " (isDefenseEnabled ? "开" : "关"), 10, 50)
+    SetTimer(() => ToolTip(), -3000)
+
+    if (isDefenseEnabled) {
+        SetTimer(RunDefense, 10)
+    } else {
+        SetTimer(RunDefense, 0)
+        Send "{Space up}"
     }
 }

@@ -107,60 +107,191 @@ StartAntiKick_Handler(intervalEdit, currentAntiKickGui) {
 }
 
 ; --- 快捷键设置GUI ---
+global tempHotkeys := Map()
+
 ShowHotkeyConfig(*) {
-    global MainGui, config, configGui
+    global MainGui, config, configGui, lvConfig, tempHotkeys
+
+    ; 临时存储当前快捷键的修改
+    tempHotkeys := Map(
+    "左键自动", config["hotkeys"]["autoClick"],
+    "计时器", config["hotkeys"]["timer"],
+    "防踢状态", config["hotkeys"]["antiKick"],
+    "自动打开箱子", config["hotkeys"]["autoOpenBox"],
+    "粘贴聊天", config["hotkeys"]["pasteChat"],
+    "间歇防御", config["hotkeys"]["defense"]
+    )
 
     configGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "快捷键设置")
     configGui.OnEvent("Close", (*) => configGui.Destroy())
 
-    configGui.Add("Text", "x20 y20 w100", "左键自动:")
-    autoClickHotkey := configGui.Add("Hotkey", "x120 y20 w100", config["hotkeys"]["autoClick"])
+    local transparentColor := "F2F2F2"
+    configGui.BackColor := transparentColor
 
-    configGui.Add("Text", "x20 y50 w100", "计时功能:")
-    timerHotkey := configGui.Add("Hotkey", "x120 y50 w100", config["hotkeys"]["timer"])
+    ; 左侧背景图
+    if FileExist("UI_MainMenu_Background.png") {
+        try {
+            configGui.Add("Picture", "x0 y0 w120 h280", "UI_MainMenu_Background.png")
+        } catch {
+            configGui.Add("Text", "x0 y0 w120 h280 BackgroundSilver", "背景图")
+        }
+    } else {
+        configGui.Add("Text", "x0 y0 w120 h280 BackgroundSilver", "背景图")
+    }
 
-    configGui.Add("Text", "x20 y80 w100", "防踢功能:")
-    antiKickHotkey := configGui.Add("Hotkey", "x120 y80 w100", config["hotkeys"]["antiKick"])
+    ; 功能列表提示文本
+    configGui.Add("Text", "x130 y10 w200 c555555", "快捷键列表 (双击修改)")
 
-    configGui.Add("Text", "x20 y110 w100", "自动打开箱子:")
-    autoOpenBoxkey := configGui.Add("Hotkey", "x120 y110 w100", config["hotkeys"]["autoOpenBox"])
+    ; 创建ListView
+    lvConfig := configGui.Add("ListView", "x130 y30 w270 h200 -Multi AltSubmit Grid", ["功能", "快捷键"])
+    lvConfig.ModifyCol(1, 140)
+    lvConfig.ModifyCol(2, 106)
 
-    configGui.Add("Button", "x50 y150 w80 Default", "保存").OnEvent("Click", (*) => SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, autoOpenBoxkey, configGui))
+    ; 使用固定顺序填充ListView，使其与主界面顺序一致
+    orderedFunctions := ["左键自动", "计时器", "防踢状态", "自动打开箱子", "粘贴聊天", "间歇防御"]
+    for name in orderedFunctions {
+        lvConfig.Add(, name, tempHotkeys[name])
+    }
 
-    configGui.Add("Button", "x150 y150 w80", "取消").OnEvent("Click", (*) => configGui.Destroy())
-    configGui.Show("Center")
+    ; 绑定双击事件进行修改
+    lvConfig.OnEvent("DoubleClick", (*) => ModifyHotkeyDlg(lvConfig))
+
+    ; 保存和取消按钮
+    configGui.Add("Button", "x160 y240 w80 Default", "保存").OnEvent("Click", (*) => SaveHotkeys_Handler(configGui))
+    configGui.Add("Button", "x290 y240 w80", "取消").OnEvent("Click", (*) => configGui.Destroy())
+
+    configGui.Show("w410 h280")
 }
 
-SaveHotkeys_Handler(autoClickHotkey, timerHotkey, antiKickHotkey, autoOpenBoxkey, currentConfigGui) {
-     global config
+; 弹出单个快捷键修改对话框
+ModifyHotkeyDlg(lv_ctrl) {
+    global tempHotkeys, configGui
+    row := lv_ctrl.GetNext() ; 获取选定的行
+    if (!row)
+        return
 
-     local autoClickVal := autoClickHotkey.Value
-     local timerVal := timerHotkey.Value
-     local antiKickVal := antiKickHotkey.Value
-     local autoOpenBoxVal := autoOpenBoxkey.Value
+    funcName := lv_ctrl.GetText(row, 1) ; 获取功能名称
+    currentKey := lv_ctrl.GetText(row, 2) ; 获取当前快捷键
 
-     local newHotkeys := Map(
-         "autoClick", autoClickVal,
-         "timer", timerVal,
-         "antiKick", antiKickVal,
-         "autoOpenBox", autoOpenBoxVal,
-     )
+    ; 创建修改单个快捷键的对话框
+    dlg := Gui("+ToolWindow +Border +Owner" configGui.Hwnd, "修改快捷键")
+    dlg.BackColor := "F2F2F2"
+    dlg.Add("Text", "x20 y20 w200", "请为【" funcName "】按下新快捷键:")
 
-     if newHotkeys["autoClick"] = "" || newHotkeys["timer"] = "" || newHotkeys["antiKick"] = "" || newHotkeys["autoOpenBox"] = "" {
-         MsgBox("快捷键不能为空！", "错误", 0x10)
-         return
-     }
+    ; 使用 AHK 自带 of Hotkey 控件
+    hkCtrl := dlg.Add("Hotkey", "x20 y50 w160", currentKey)
 
-     if (newHotkeys["autoClick"] = newHotkeys["timer"] ||
-         newHotkeys["autoClick"] = newHotkeys["antiKick"] ||
-         newHotkeys["timer"] = newHotkeys["antiKick"]) {
-         MsgBox("快捷键不能重复！", "错误", 0x10)
-         return
-     }
+    dlg.Add("Button", "x20 y95 w70 Default", "确定").OnEvent("Click", (*) => ConfirmHotkey(dlg, lv_ctrl, row, funcName, hkCtrl.Value))
+    dlg.Add("Button", "x110 y95 w70", "取消").OnEvent("Click", (*) => dlg.Destroy())
+    dlg.Show("w200 h140 Center")
+}
 
-     config["hotkeys"] := newHotkeys.Clone()
-     SaveConfig()
-     ApplyHotkeys()
-     UpdateListViewHotkeys()
-     currentConfigGui.Destroy()
+; 确认单个快捷键的修改
+ConfirmHotkey(dlg, lv_ctrl, row, funcName, newVal) {
+    global tempHotkeys
+    if (newVal = "") {
+        MsgBox("快捷键不能为空！", "错误", 0x10)
+        return
+    }
+
+    ; 检查是否与其他功能的快捷键冲突
+    for name, key in tempHotkeys {
+        if (name != funcName && key == newVal) {
+            MsgBox("该快捷键已被【" name "】使用，请设置其他快捷键！", "错误", 0x10)
+            return
+        }
+    }
+
+    ; 更新临时存储并刷新ListView中的显示
+    tempHotkeys[funcName] := newVal
+    lv_ctrl.Modify(row,, funcName, newVal)
+    dlg.Destroy()
+}
+
+; 保存全部快捷键设置
+SaveHotkeys_Handler(currentConfigGui) {
+    global config, tempHotkeys
+
+    local autoClickVal := tempHotkeys["左键自动"]
+    local timerVal := tempHotkeys["计时器"]
+    local antiKickVal := tempHotkeys["防踢状态"]
+    local autoOpenBoxVal := tempHotkeys["自动打开箱子"]
+    local pasteChatVal := tempHotkeys["粘贴聊天"]
+    local defenseVal := tempHotkeys["间歇防御"]
+
+    local newHotkeys := Map(
+    "autoClick", autoClickVal,
+    "timer", timerVal,
+    "antiKick", antiKickVal,
+    "autoOpenBox", autoOpenBoxVal,
+    "pasteChat", pasteChatVal,
+    "defense", defenseVal
+    )
+
+    ; 再次验证不能为空（防呆设计）
+    for key, val in newHotkeys {
+        if val = "" {
+            MsgBox("快捷键不能为空！", "错误", 0x10)
+            return
+        }
+    }
+
+    ; 验证不能重复
+    local seenVals := Map()
+    for key, val in newHotkeys {
+        if seenVals.Has(val) {
+            MsgBox("快捷键不能重复！", "错误", 0x10)
+            return
+        }
+        seenVals[val] := true
+    }
+
+    config["hotkeys"] := newHotkeys.Clone()
+    SaveConfig()
+    ApplyHotkeys()
+    UpdateListViewHotkeys()
+    currentConfigGui.Destroy()
+    MsgBox("快捷键设置已成功保存！", "提示", 0x40)
+}
+
+; --- 间歇防御设置GUI ---
+ShowDefenseConfig() {
+    global config, MainGui, defenseGui
+
+    defenseGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "间歇防御设置")
+    defenseGui.OnEvent("Close", (*) => defenseGui.Destroy())
+
+    local transparentColor := "F2F2F2"
+    defenseGui.BackColor := transparentColor
+
+    defenseGui.Add("Text", "x20 y20", "空格按下防御时间(秒):")
+    defenseGui.Add("Text", "x20 y45 c535353", "举盾时间，按照具体体力来决定")
+
+    pauseEdit := defenseGui.Add("Edit", "x200 y18 w60 Number", config["delays"]["defensePause"])
+    defenseGui.Add("UpDown", "Range1-60", config["delays"]["defensePause"])
+
+    defenseGui.Add("Button", "x40 y90 w80 Default", "保存").OnEvent("Click", (*) => SaveDefenseSettings_Handler(pauseEdit, defenseGui))
+    defenseGui.Add("Button", "x160 y90 w80", "取消").OnEvent("Click", (*) => defenseGui.Destroy())
+
+    defenseGui.Show("Center h130 w280")
+}
+
+SaveDefenseSettings_Handler(pauseEdit, currentDefenseGui) {
+    global config, lv, isDefenseEnabled
+
+    if (!IsNumber(pauseEdit.Value) || pauseEdit.Value <= 0) {
+        MsgBox("停顿时长必须为正数字！", "错误", 0x10)
+        return
+    }
+
+    config["delays"]["defensePause"] := pauseEdit.Value
+    SaveConfig()
+    currentDefenseGui.Destroy()
+
+    ; 动态更新 ListView 中的行状态显示（若功能已启用，则同步显示最新停顿秒数）
+    if (row := GetRowIndexByFunctionName("间歇防御")) {
+        lv.Modify(row,,, isDefenseEnabled ? "停顿" config["delays"]["defensePause"] "s" : "关闭")
+    }
+
+    MsgBox("停顿时间已保存并应用！", "提示", 0x40)
 }

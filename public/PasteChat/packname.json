@@ -1,0 +1,11 @@
+{
+    "name": "粘贴聊天",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "在碧海黑帆游戏内模拟打字粘贴剪贴板内容到聊天框",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "pasteChat", "default": "F5" }
+    ]
+}

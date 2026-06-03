@@ -1,0 +1,11 @@
+{
+    "name": "计时器",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "倒计时计时器，支持自定义计时时长，计时结束时播放提示音",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "timer", "default": "F2" }
+    ]
+}

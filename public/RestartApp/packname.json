@@ -1,0 +1,11 @@
+{
+    "name": "重启程序",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "按下快捷键瞬间重启小助手主程序，重新加载配置和界面",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "restartKey", "default": "^F1" }
+    ]
+}

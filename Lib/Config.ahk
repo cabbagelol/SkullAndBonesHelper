@@ -1,8 +1,9 @@
 ; Lib\Config.ahk
+; 配置读取与保存模块 - 封装底层配置文件访问
 
 ; 加载配置
 LoadConfig() {
-    global userConfigFile, appConfigFile, config
+    global config
 
     oldConfigFile := A_ScriptDir "\config.ini"
 
@@ -36,58 +37,42 @@ LoadConfig() {
         return
     }
 
-    if FileExist(userConfigFile) {
-        try {
-            config["hotkeys"]["autoClick"] := IniRead(userConfigFile, "Hotkeys", "AutoClick", config["hotkeys"]["autoClick"])
-            config["hotkeys"]["autoOpenBox"] := IniRead(userConfigFile, "Hotkeys", "AutoOpenBox", config["hotkeys"]["autoOpenBox"])
-            config["hotkeys"]["timer"] := IniRead(userConfigFile, "Hotkeys", "Timer", config["hotkeys"]["timer"])
-            config["hotkeys"]["antiKick"] := IniRead(userConfigFile, "Hotkeys", "AntiKick", config["hotkeys"]["antiKick"])
-            config["hotkeys"]["pasteChat"] := IniRead(userConfigFile, "Hotkeys", "PasteChat", config["hotkeys"]["pasteChat"])
-            config["hotkeys"]["defense"] := IniRead(userConfigFile, "Hotkeys", "Defense", config["hotkeys"]["defense"])
+    ; 使用公共配置助手加载配置
+    config["hotkeys"]["autoClick"] := GetUserConfig("Hotkeys", "AutoClick", config["hotkeys"]["autoClick"])
+    config["hotkeys"]["autoOpenBox"] := GetUserConfig("Hotkeys", "AutoOpenBox", config["hotkeys"]["autoOpenBox"])
+    config["hotkeys"]["timer"] := GetUserConfig("Hotkeys", "Timer", config["hotkeys"]["timer"])
+    config["hotkeys"]["antiKick"] := GetUserConfig("Hotkeys", "AntiKick", config["hotkeys"]["antiKick"])
+    config["hotkeys"]["pasteChat"] := GetUserConfig("Hotkeys", "PasteChat", config["hotkeys"]["pasteChat"])
+    config["hotkeys"]["defense"] := GetUserConfig("Hotkeys", "Defense", config["hotkeys"]["defense"])
 
-            config["delays"]["down"] := IniRead(userConfigFile, "Delays", "Down", config["delays"]["down"])
-            config["delays"]["up"] := IniRead(userConfigFile, "Delays", "Up", config["delays"]["up"])
-            config["delays"]["autoClickModel"] := IniRead(userConfigFile, "Delays", "AutoClickModel", config["delays"]["autoClickModel"])
-            config["delays"]["defensePause"] := IniRead(userConfigFile, "Delays", "DefensePause", config["delays"]["defensePause"])
-        } catch {
-            try FileDelete(userConfigFile)
-            MsgBox("用户配置文件加载失败或已损坏，已重置为默认设置。", "警告", 0x30)
-        }
-    }
+    config["delays"]["down"] := GetUserConfig("Delays", "Down", config["delays"]["down"])
+    config["delays"]["up"] := GetUserConfig("Delays", "Up", config["delays"]["up"])
+    config["delays"]["autoClickModel"] := GetUserConfig("Delays", "AutoClickModel", config["delays"]["autoClickModel"])
+    config["delays"]["defensePause"] := GetUserConfig("Delays", "DefensePause", config["delays"]["defensePause"])
 
-    if FileExist(appConfigFile) {
-        try {
-            config["app"]["version"] := IniRead(appConfigFile, "App", "Version", config["app"]["version"])
-            config["app"]["isAutoClickAltStopEnabled"] := IniRead(appConfigFile, "App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"])
-            config["app"]["isInitialCheckVersion"] := IniRead(appConfigFile, "App", "IsInitialCheckVersion", config["app"]["isInitialCheckVersion"])
-        } catch {
-            try FileDelete(appConfigFile)
-            MsgBox("程序配置文件加载失败或已损坏，已重置为默认设置。", "警告", 0x30)
-        }
-    }
+    config["app"]["version"] := GetAppConfig("App", "Version", config["app"]["version"])
+    config["app"]["isAutoClickAltStopEnabled"] := GetAppConfig("App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"])
+    config["app"]["isInitialCheckVersion"] := GetAppConfig("App", "IsInitialCheckVersion", config["app"]["isInitialCheckVersion"])
 }
 
 ; 保存配置
 SaveConfig() {
-    global userConfigFile, appConfigFile, config
+    global config
 
-    try {
-        IniWrite(config["hotkeys"]["autoClick"], userConfigFile, "Hotkeys", "AutoClick")
-        IniWrite(config["hotkeys"]["autoOpenBox"], userConfigFile, "Hotkeys", "AutoOpenBox")
-        IniWrite(config["hotkeys"]["timer"], userConfigFile, "Hotkeys", "Timer")
-        IniWrite(config["hotkeys"]["antiKick"], userConfigFile, "Hotkeys", "AntiKick")
-        IniWrite(config["hotkeys"]["pasteChat"], userConfigFile, "Hotkeys", "PasteChat")
-        IniWrite(config["hotkeys"]["defense"], userConfigFile, "Hotkeys", "Defense")
+    ; 使用公共配置助手保存配置
+    SetUserConfig("Hotkeys", "AutoClick", config["hotkeys"]["autoClick"])
+    SetUserConfig("Hotkeys", "AutoOpenBox", config["hotkeys"]["autoOpenBox"])
+    SetUserConfig("Hotkeys", "Timer", config["hotkeys"]["timer"])
+    SetUserConfig("Hotkeys", "AntiKick", config["hotkeys"]["antiKick"])
+    SetUserConfig("Hotkeys", "PasteChat", config["hotkeys"]["pasteChat"])
+    SetUserConfig("Hotkeys", "Defense", config["hotkeys"]["defense"])
 
-        IniWrite(config["delays"]["down"], userConfigFile, "Delays", "Down")
-        IniWrite(config["delays"]["up"], userConfigFile, "Delays", "Up")
-        IniWrite(config["delays"]["autoClickModel"], userConfigFile, "Delays", "AutoClickModel")
-        IniWrite(config["delays"]["defensePause"], userConfigFile, "Delays", "DefensePause")
+    SetUserConfig("Delays", "Down", config["delays"]["down"])
+    SetUserConfig("Delays", "Up", config["delays"]["up"])
+    SetUserConfig("Delays", "AutoClickModel", config["delays"]["autoClickModel"])
+    SetUserConfig("Delays", "DefensePause", config["delays"]["defensePause"])
 
-        IniWrite(config["app"]["version"], appConfigFile, "App", "Version")
-        IniWrite(config["app"]["isAutoClickAltStopEnabled"], appConfigFile, "App", "IsAutoClickAltStopEnabled")
-        IniWrite(config["app"]["isInitialCheckVersion"], appConfigFile, "App", "IsInitialCheckVersion")
-    } catch as e {
-        MsgBox("保存配置失败: " e.Message, "错误", 0x10)
-    }
+    SetAppConfig("App", "Version", config["app"]["version"])
+    SetAppConfig("App", "IsAutoClickAltStopEnabled", config["app"]["isAutoClickAltStopEnabled"])
+    SetAppConfig("App", "IsInitialCheckVersion", config["app"]["isInitialCheckVersion"])
 }

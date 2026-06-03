@@ -1,42 +1,104 @@
 ; Lib\Hotkeys.ahk
 
+global registeredMainHotkeys := Map(
+    "autoClick", "",
+    "autoOpenBox", "",
+    "timer", "",
+    "antiKick", "",
+    "pasteChat", "",
+    "defense", ""
+)
+
 ; 应用热键
 ApplyHotkeys() {
-    global config
+    global config, registeredMainHotkeys
 
-    try Hotkey(config["hotkeys"]["autoClick"], "Off")
-    try Hotkey(config["hotkeys"]["autoOpenBox"], "Off")
-    try Hotkey(config["hotkeys"]["timer"], "Off")
-    try Hotkey(config["hotkeys"]["antiKick"], "Off")
-    try Hotkey(config["hotkeys"]["pasteChat"], "Off")
-    try Hotkey(config["hotkeys"]["defense"], "Off")
+    ; 1. 关停所有之前由主程序物理注册的旧热键，防止传递与残留
+    for name, key in registeredMainHotkeys {
+        if (key != "") {
+            try Hotkey(key, "Off")
+            registeredMainHotkeys[name] := ""
+        }
+    }
 
-    if (IsValidHotkey(config["hotkeys"]["autoClick"], ["LButton"])) {
-        try Hotkey("$" config["hotkeys"]["autoClick"], ToggleAutoClick, "On")
+    ; 2. 根据插件运行状态，绑定新热键或向运行中的插件发送更新通知
+    
+    ; 左键自动
+    if (!IsPluginRunning("AutoClick")) {
+        key := config["hotkeys"]["autoClick"]
+        if (IsValidHotkey(key, ["LButton"])) {
+            try {
+                Hotkey(key, HotkeyTrigger_AutoClick, "On")
+                registeredMainHotkeys["autoClick"] := key
+            }
+        }
     } else {
-        config["hotkeys"]["autoClick"] := "XButton1" ; 设置默认值
-        SaveConfig()
-        try Hotkey("$XButton1", ToggleAutoClick, "On")
+        NotifyPluginHotkeyUpdate("AutoClick")
     }
 
-    if (IsValidHotkey(config["hotkeys"]["autoOpenBox"])) {
-        try Hotkey("$" config["hotkeys"]["autoOpenBox"], ToggleAutoOpenBox, "On")
+    ; 自动打开箱子
+    if (!IsPluginRunning("AutoOpenBox")) {
+        key := config["hotkeys"]["autoOpenBox"]
+        if (IsValidHotkey(key)) {
+            try {
+                Hotkey(key, HotkeyTrigger_AutoOpenBox, "On")
+                registeredMainHotkeys["autoOpenBox"] := key
+            }
+        }
+    } else {
+        NotifyPluginHotkeyUpdate("AutoOpenBox")
     }
 
-    if (IsValidHotkey(config["hotkeys"]["timer"])) {
-        try Hotkey("$" config["hotkeys"]["timer"], ToggleTimer, "On")
+    ; 计时器
+    if (!IsPluginRunning("Timer")) {
+        key := config["hotkeys"]["timer"]
+        if (IsValidHotkey(key)) {
+            try {
+                Hotkey(key, HotkeyTrigger_Timer, "On")
+                registeredMainHotkeys["timer"] := key
+            }
+        }
+    } else {
+        NotifyPluginHotkeyUpdate("Timer")
     }
 
-    if (IsValidHotkey(config["hotkeys"]["antiKick"])) {
-        try Hotkey("$" config["hotkeys"]["antiKick"], ToggleAntiKick, "On")
+    ; 防踢状态
+    if (!IsPluginRunning("AntiKick")) {
+        key := config["hotkeys"]["antiKick"]
+        if (IsValidHotkey(key)) {
+            try {
+                Hotkey(key, HotkeyTrigger_AntiKick, "On")
+                registeredMainHotkeys["antiKick"] := key
+            }
+        }
+    } else {
+        NotifyPluginHotkeyUpdate("AntiKick")
     }
 
-    if (IsValidHotkey(config["hotkeys"]["pasteChat"])) {
-        try Hotkey("$" config["hotkeys"]["pasteChat"], TogglePasteChat, "On")
+    ; 粘贴聊天
+    if (!IsPluginRunning("PasteChat")) {
+        key := config["hotkeys"]["pasteChat"]
+        if (IsValidHotkey(key)) {
+            try {
+                Hotkey(key, HotkeyTrigger_PasteChat, "On")
+                registeredMainHotkeys["pasteChat"] := key
+            }
+        }
+    } else {
+        NotifyPluginHotkeyUpdate("PasteChat")
     }
 
-    if (IsValidHotkey(config["hotkeys"]["defense"])) {
-        try Hotkey("$" config["hotkeys"]["defense"], ToggleDefense, "On")
+    ; 间歇防御
+    if (!IsPluginRunning("Defense")) {
+        key := config["hotkeys"]["defense"]
+        if (IsValidHotkey(key)) {
+            try {
+                Hotkey(key, HotkeyTrigger_Defense, "On")
+                registeredMainHotkeys["defense"] := key
+            }
+        }
+    } else {
+        NotifyPluginHotkeyUpdate("Defense")
     }
 }
 
@@ -54,93 +116,95 @@ IsValidHotkey(hotkey, excludeList := []) {
         return false
     }
 
-    ; 其他有效性检查...
     return true
 }
 
-; --- 功能开关与执行 (由快捷键触发的逻辑) ---
+; 向指定运行中的插件发送快捷键热重载通知 (周期消息 0x8002)
+NotifyPluginHotkeyUpdate(pluginFolderName) {
+    global pluginList
+    if !pluginList.Has(pluginFolderName) {
+        return
+    }
+    pluginTitle := pluginList[pluginFolderName]["name"] " v" pluginList[pluginFolderName]["version"]
+    
+    DetectHiddenWindows(true)
+    if WinExist(pluginTitle) {
+        PostMessage(0x8002, 0, 0, , pluginTitle)
+    }
+}
 
-; 切换左键自动
+; --- 快捷按键触发器 (当插件未运行，按下热键时，在后台启动并立即激活功能，不显示GUI) ---
+
+HotkeyTrigger_AutoClick(*) {
+    StartPlugin("AutoClick", "/active")
+}
+
+HotkeyTrigger_Timer(*) {
+    StartPlugin("Timer", "/active")
+}
+
+HotkeyTrigger_AntiKick(*) {
+    StartPlugin("AntiKick", "/active")
+}
+
+HotkeyTrigger_AutoOpenBox(*) {
+    StartPlugin("AutoOpenBox", "/active")
+}
+
+HotkeyTrigger_PasteChat(*) {
+    StartPlugin("PasteChat", "/active")
+}
+
+HotkeyTrigger_Defense(*) {
+    StartPlugin("Defense", "/active")
+}
+
+; --- 界面操作切换器 (菜单栏点击或列表双击触发，显示或唤醒配置GUI) ---
+
 ToggleAutoClick(*) {
-    global isAutoClickEnabled, lv, config
-    isAutoClickEnabled := !isAutoClickEnabled
-
-    if (row := GetRowIndexByFunctionName("左键自动"))
-        lv.Modify(row, isAutoClickEnabled ? "Check" : "-Check", "左键自动", config["hotkeys"]["autoClick"], isAutoClickEnabled ? "开启" : "关闭")
-
-    ToolTip("左键自动: " (isAutoClickEnabled ? "开" : "关"), 10, 10)
-    SetTimer(() => ToolTip(), -3000)
+    if IsPluginRunning("AutoClick") {
+        ShowPluginGui("AutoClick")
+    } else {
+        StartPlugin("AutoClick", "/show")
+    }
 }
 
-; 切换计时器 (由快捷键触发)
 ToggleTimer(*) {
-    global timerRunning
-    if timerRunning {
-        StopTimer() ; Call the function from Lib\Functions.ahk
+    if IsPluginRunning("Timer") {
+        ShowPluginGui("Timer")
     } else {
-        StartTimer(60 * 1000) ; Call the function from Lib\Functions.ahk
+        StartPlugin("Timer", "/show")
     }
 }
 
-; 切换防踢
 ToggleAntiKick(*) {
-    global isRandomKeyEnabled, randomKeyTimer, lv, config
-    isRandomKeyEnabled := !isRandomKeyEnabled
-
-    if isRandomKeyEnabled {
-        StartAntiKick(60 * 1000) ; Call the function from Lib\Functions.ahk
+    if IsPluginRunning("AntiKick") {
+        ShowPluginGui("AntiKick")
     } else {
-        if randomKeyTimer {
-            SetTimer(randomKeyTimer, 0)
-            randomKeyTimer := 0
-        }
-        if (row := GetRowIndexByFunctionName("防踢状态"))
-            lv.Modify(row, "-Check", "防踢状态", config["hotkeys"]["antiKick"], "关闭")
-        ToolTip("防踢模式已关闭", 10, 50)
-        SetTimer(() => ToolTip(), -1000)
+        StartPlugin("AntiKick", "/show")
     }
 }
 
-; 自动打开箱子
 ToggleAutoOpenBox(*) {
-    global isAutoOpenBoxEnabled, autoOpenBoxRunning, config
-    isAutoOpenBoxEnabled := !isAutoOpenBoxEnabled
-
-    if autoOpenBoxRunning {
-        autoOpenBoxRunning := false
+    if IsPluginRunning("AutoOpenBox") {
+        ShowPluginGui("AutoOpenBox")
     } else {
-        StartAutoOpenBox()
-        autoOpenBoxRunning := true
+        StartPlugin("AutoOpenBox", "/show")
     }
 }
 
-; 切换粘贴聊天
 TogglePasteChat(*) {
-    global isPasteChatEnabled, lv, config
-    isPasteChatEnabled := !isPasteChatEnabled
-
-    if (row := GetRowIndexByFunctionName("粘贴聊天"))
-        lv.Modify(row, isPasteChatEnabled ? "Check" : "-Check", "粘贴聊天", config["hotkeys"]["pasteChat"], isPasteChatEnabled ? "开启" : "关闭")
-
-    ToolTip("粘贴聊天: " (isPasteChatEnabled ? "开" : "关"), 10, 50)
-    SetTimer(() => ToolTip(), -3000)
+    if IsPluginRunning("PasteChat") {
+        ShowPluginGui("PasteChat")
+    } else {
+        StartPlugin("PasteChat", "/show")
+    }
 }
 
-; 切换间歇防御
 ToggleDefense(*) {
-    global isDefenseEnabled, lv, config
-    isDefenseEnabled := !isDefenseEnabled
-
-    if (row := GetRowIndexByFunctionName("间歇防御"))
-        lv.Modify(row, isDefenseEnabled ? "Check" : "-Check", "间歇防御", config["hotkeys"]["defense"], isDefenseEnabled ? "停顿" config["delays"]["defensePause"] "s" : "关闭")
-
-    ToolTip("间歇防御: " (isDefenseEnabled ? "开" : "关"), 10, 50)
-    SetTimer(() => ToolTip(), -3000)
-
-    if (isDefenseEnabled) {
-        SetTimer(RunDefense, 10)
+    if IsPluginRunning("Defense") {
+        ShowPluginGui("Defense")
     } else {
-        SetTimer(RunDefense, 0)
-        Send "{Space up}"
+        StartPlugin("Defense", "/show")
     }
 }

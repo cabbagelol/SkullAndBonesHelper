@@ -1,0 +1,11 @@
+{
+    "name": "自动开箱",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "自动打开箱子功能，支持船仓/仓库模式，可自定义开箱次数",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "autoOpenBox", "default": "F4" }
+    ]
+}

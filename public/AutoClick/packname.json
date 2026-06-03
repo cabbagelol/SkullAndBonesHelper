@@ -1,0 +1,11 @@
+{
+    "name": "左键自动",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "自动左键点击功能，支持按住触发和切换触发两种模式，可自定义按键延迟",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "autoClick", "default": "F1" }
+    ]
+}

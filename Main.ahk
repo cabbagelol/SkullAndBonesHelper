@@ -3,10 +3,7 @@
 #SingleInstance Force
 #Warn All, Off
 
-; --- Global Variables and Configuration ---
-; 配置文件路径 1
-userConfigFile := A_ScriptDir "\user.config.ini"
-appConfigFile := A_ScriptDir "\app.config.ini"
+; --- 全局变量和配置 ---
 
 ; 默认配置
 global config := Map(
@@ -54,16 +51,17 @@ global configGui := 0
 global defenseGui := 0
 global AboutGui := 0 ; 也全局化 AboutGui 以管理其状态
 
-; --- Import Modules ---
+; --- 导入模块 ---
+#Include Lib\ConfigHelper.ahk
 #Include Lib\Config.ahk
 #Include Lib\GUI_Main.ahk
 #Include Lib\GUI_Configs.ahk
-#Include Lib\Functions.ahk
 #Include Lib\Hotkeys.ahk
 #Include Lib\Resources.ahk
 #Include Lib\About.ahk
+#Include Lib\PluginManager.ahk
 
-; --- Initialization Sequence ---
+; --- 初始化流程 ---
 try {
     LoadConfig()
 
@@ -71,7 +69,13 @@ try {
 
     CreateMainGui()
 
+    ; 加载已安装的插件
+    LoadPlugins()
+
     ApplyHotkeys()
+
+    ; 启动插件进程状态轮询监控，保证主界面列表及快捷键接管状态实时同步
+    SetTimer(MonitorPlugins, 1000)
 
     if config["app"]["isInitialCheckVersion"] {
         CheckForUpdate(false)

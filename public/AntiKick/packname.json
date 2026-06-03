@@ -1,0 +1,11 @@
+{
+    "name": "防踢",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "防止AFK踢出功能，定时发送随机按键保持活动状态",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "antiKick", "default": "F3" }
+    ]
+}

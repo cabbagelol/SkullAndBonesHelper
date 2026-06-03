@@ -1,0 +1,8 @@
+{
+    "name": "示例插件",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "这是一个演示插件，展示插件系统的基本结构和用法",
+    "updateDate": "2026-06-03",
+    "updateUrls": []
+}

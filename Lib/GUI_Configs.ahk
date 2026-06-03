@@ -1,112 +1,6 @@
 ; Lib\GUI_Configs.ahk
+; 主程序快捷键设置 GUI
 
-; --- 左键自动延迟设置GUI ---
-ShowDelayConfig() {
-    global config, MainGui, delayGui
-
-    delayGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "左键自动延迟设置")
-    delayGui.OnEvent("Close", (*) => delayGui.Destroy())
-
-    delayGui.Add("Text", "x10 y10", "间隙延迟(ms):")
-    delayGui.Add("Text", "x10 y35 c535353", "左键按下和松开间隙延迟")
-
-    downEdit := delayGui.Add("Edit", "x100 y8 w60 Number", config["delays"]["down"])
-    delayGui.Add("UpDown", "Range1-1000", config["delays"]["down"])
-
-    delayGui.Add("Text", "x10 y70", "组合延迟(ms):")
-    delayGui.Add("Text", "x10 y90 c535353", "在完成一组单击事件后下次触发间隙时间")
-
-    upEdit := delayGui.Add("Edit", "x100 y66 w60 Number", config["delays"]["up"])
-    delayGui.Add("UpDown", "Range1-1000", config["delays"]["up"])
-
-    delayGui.Add("Text", "x10 y120", "模式")
-    delayGui.Add("Text", "x10 y140 c535353", "触发模式: (1)按住重复触发 (2)按下切换重复触发")
-
-    modelEdit := delayGui.Add("Edit", "x100 y118 w50 Number", config["delays"]["autoClickModel"])
-    delayGui.Add("UpDown", "Range1-1000", config["delays"]["autoClickModel"])
-
-    delayGui.Add("Button", "x20 y170 w80 Default", "保存").OnEvent("Click", (*) => SaveDelaySettings_Handler(downEdit, upEdit, delayGui, modelEdit))
-    delayGui.Add("Button", "x150 y170 w80", "取消").OnEvent("Click", (*) => delayGui.Destroy())
-
-    delayGui.Show("Center h200")
-}
-
-SaveDelaySettings_Handler(downEdit, upEdit, currentDelayGui,modelEdit) {
-    global config, lv
-
-    config["delays"]["down"] := downEdit.Value
-    config["delays"]["up"] := upEdit.Value
-    config["delays"]["autoClickModel"] := modelEdit.Value
-    SaveConfig() ; 调用 Lib\Config.ahk 中的函数
-    currentDelayGui.Destroy()
-    MsgBox("延迟设置已保存！", "提示", 0x40)
-}
-
-; --- 计时器设置GUI ---
-ShowTimerConfig() {
-    global timerRunning, MainGui, timerGui
-    if timerRunning {
-        MsgBox("计时器已经在运行中，请先停止它。", "提示", 0x40)
-        return
-    }
-
-    timerGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "计时器设置")
-    timerGui.OnEvent("Close", (*) => timerGui.Destroy())
-
-    timerGui.Add("Text", "x10 y10", "计时时长(秒):")
-    durationEdit := timerGui.Add("Edit", "x100 y10 w60 Number", "60")
-    timerGui.Add("UpDown", "Range10-3600", 60)
-
-    timerGui.Add("Button", "x20 y50 w80 Default", "启动").OnEvent("Click", (*) => StartTimer_Handler(durationEdit, timerGui))
-
-    timerGui.Add("Button", "x120 y50 w80", "取消").OnEvent("Click", (*) => timerGui.destroy())
-    timerGui.Show("Center")
-}
-
-StartTimer_Handler(durationEdit, currentTimerGui) {
-    global timerRunning
-    if (!IsNumber(durationEdit.Value) || durationEdit.Value < 10) {
-        MsgBox("计时时长必须为数字且不小于10秒！", "错误", 0x10)
-        return
-    }
-    duration := durationEdit.Value * 1000
-    StartTimer(duration) ; 调用 Lib\Functions.ahk 中的函数
-    currentTimerGui.Destroy()
-}
-
-; --- 防踢设置GUI ---
-ShowAntiKickConfig() {
-    global isRandomKeyEnabled, MainGui, antiKickGui
-    if isRandomKeyEnabled {
-        MsgBox("防踢功能已经在运行中，请先停止它。", "提示", 0x40)
-        return
-    }
-
-    antiKickGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "防踢设置")
-    antiKickGui.OnEvent("Close", (*) => antiKickGui.Destroy())
-
-    antiKickGui.Add("Text", "x10 y10", "按键间隔(秒):")
-    intervalEdit := antiKickGui.Add("Edit", "x100 y10 w60 Number", "60")
-    antiKickGui.Add("UpDown", "Range10-600", 60)
-
-    antiKickGui.Add("Button", "x20 y50 w80 Default", "启用").OnEvent("Click", (*) => StartAntiKick_Handler(intervalEdit, antiKickGui))
-
-    antiKickGui.Add("Button", "x120 y50 w80", "取消").OnEvent("Click", (*) => antiKickGui.destroy())
-    antiKickGui.Show("Center")
-}
-
-StartAntiKick_Handler(intervalEdit, currentAntiKickGui) {
-    global isRandomKeyEnabled
-    if (!IsNumber(intervalEdit.Value) || intervalEdit.Value < 10) {
-        MsgBox("按键间隔必须为数字且不小于10秒！", "错误", 0x10)
-        return
-    }
-    interval := intervalEdit.Value * 1000
-    StartAntiKick(interval) ; 调用 Lib\Functions.ahk 中的函数
-    currentAntiKickGui.Destroy()
-}
-
-; --- 快捷键设置GUI ---
 global tempHotkeys := Map()
 
 ShowHotkeyConfig(*) {
@@ -114,12 +8,12 @@ ShowHotkeyConfig(*) {
 
     ; 临时存储当前快捷键的修改
     tempHotkeys := Map(
-    "左键自动", config["hotkeys"]["autoClick"],
-    "计时器", config["hotkeys"]["timer"],
-    "防踢状态", config["hotkeys"]["antiKick"],
-    "自动打开箱子", config["hotkeys"]["autoOpenBox"],
-    "粘贴聊天", config["hotkeys"]["pasteChat"],
-    "间歇防御", config["hotkeys"]["defense"]
+        "左键自动", config["hotkeys"]["autoClick"],
+        "计时器", config["hotkeys"]["timer"],
+        "防踢状态", config["hotkeys"]["antiKick"],
+        "自动打开箱子", config["hotkeys"]["autoOpenBox"],
+        "粘贴聊天", config["hotkeys"]["pasteChat"],
+        "间歇防御", config["hotkeys"]["defense"]
     )
 
     configGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "快捷键设置")
@@ -178,7 +72,7 @@ ModifyHotkeyDlg(lv_ctrl) {
     dlg.BackColor := "F2F2F2"
     dlg.Add("Text", "x20 y20 w200", "请为【" funcName "】按下新快捷键:")
 
-    ; 使用 AHK 自带 of Hotkey 控件
+    ; 使用 AHK 自带的 Hotkey 控件
     hkCtrl := dlg.Add("Hotkey", "x20 y50 w160", currentKey)
 
     dlg.Add("Button", "x20 y95 w70 Default", "确定").OnEvent("Click", (*) => ConfirmHotkey(dlg, lv_ctrl, row, funcName, hkCtrl.Value))
@@ -220,12 +114,12 @@ SaveHotkeys_Handler(currentConfigGui) {
     local defenseVal := tempHotkeys["间歇防御"]
 
     local newHotkeys := Map(
-    "autoClick", autoClickVal,
-    "timer", timerVal,
-    "antiKick", antiKickVal,
-    "autoOpenBox", autoOpenBoxVal,
-    "pasteChat", pasteChatVal,
-    "defense", defenseVal
+        "autoClick", autoClickVal,
+        "timer", timerVal,
+        "antiKick", antiKickVal,
+        "autoOpenBox", autoOpenBoxVal,
+        "pasteChat", pasteChatVal,
+        "defense", defenseVal
     )
 
     ; 再次验证不能为空（防呆设计）
@@ -252,46 +146,4 @@ SaveHotkeys_Handler(currentConfigGui) {
     UpdateListViewHotkeys()
     currentConfigGui.Destroy()
     MsgBox("快捷键设置已成功保存！", "提示", 0x40)
-}
-
-; --- 间歇防御设置GUI ---
-ShowDefenseConfig() {
-    global config, MainGui, defenseGui
-
-    defenseGui := Gui("+ToolWindow +Border +Owner" MainGui.Hwnd, "间歇防御设置")
-    defenseGui.OnEvent("Close", (*) => defenseGui.Destroy())
-
-    local transparentColor := "F2F2F2"
-    defenseGui.BackColor := transparentColor
-
-    defenseGui.Add("Text", "x20 y20", "空格按下防御时间(秒):")
-    defenseGui.Add("Text", "x20 y45 c535353", "举盾时间，按照具体体力来决定")
-
-    pauseEdit := defenseGui.Add("Edit", "x200 y18 w60 Number", config["delays"]["defensePause"])
-    defenseGui.Add("UpDown", "Range1-60", config["delays"]["defensePause"])
-
-    defenseGui.Add("Button", "x40 y90 w80 Default", "保存").OnEvent("Click", (*) => SaveDefenseSettings_Handler(pauseEdit, defenseGui))
-    defenseGui.Add("Button", "x160 y90 w80", "取消").OnEvent("Click", (*) => defenseGui.Destroy())
-
-    defenseGui.Show("Center h130 w280")
-}
-
-SaveDefenseSettings_Handler(pauseEdit, currentDefenseGui) {
-    global config, lv, isDefenseEnabled
-
-    if (!IsNumber(pauseEdit.Value) || pauseEdit.Value <= 0) {
-        MsgBox("停顿时长必须为正数字！", "错误", 0x10)
-        return
-    }
-
-    config["delays"]["defensePause"] := pauseEdit.Value
-    SaveConfig()
-    currentDefenseGui.Destroy()
-
-    ; 动态更新 ListView 中的行状态显示（若功能已启用，则同步显示最新停顿秒数）
-    if (row := GetRowIndexByFunctionName("间歇防御")) {
-        lv.Modify(row,,, isDefenseEnabled ? "停顿" config["delays"]["defensePause"] "s" : "关闭")
-    }
-
-    MsgBox("停顿时间已保存并应用！", "提示", 0x40)
 }

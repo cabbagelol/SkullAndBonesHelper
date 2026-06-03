@@ -1,0 +1,11 @@
+{
+    "name": "间歇防御",
+    "version": "1.0.0",
+    "author": "cabbagelol",
+    "description": "间歇防御功能，自动按住空格进行防御，可自定义停顿时间",
+    "updateDate": "2026-06-03",
+    "updateUrls": [],
+    "hotkeys": [
+        { "name": "defense", "default": "F7" }
+    ]
+}

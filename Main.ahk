@@ -67,10 +67,10 @@ try {
 
     CheckResources()
 
-    CreateMainGui()
-
     ; 加载已安装的插件
     LoadPlugins()
+
+    CreateMainGui()
 
     ApplyHotkeys()
 

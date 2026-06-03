@@ -6,6 +6,13 @@
     "updateDate": "2026-06-03",
     "updateUrls": [],
     "hotkeys": [
-        { "name": "restartKey", "default": "^F1" }
-    ]
+        {
+            "name": "restartKey",
+            "default": "^F1"
+        }
+    ],
+    "visible": false,
+    "uninstallable": true,
+    "closable": true,
+    "runnable": true
 }

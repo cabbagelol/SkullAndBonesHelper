@@ -56,11 +56,6 @@ class DefensePlugin extends PluginLifecycle {
         if this.showGui {
             this.myGui.Show("w300 h205 Center")
         }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
-        }
     }
 
     Toggle() {
@@ -98,32 +93,26 @@ class DefensePlugin extends PluginLifecycle {
             return
         }
 
-        if (WinActive("ahk_exe skullandbones.exe") or WinActive("Skull and Bones")) {
-            SetKeyDelay(50, 50)
+        SetKeyDelay(50, 50)
 
-            ; 按下空格
-            Send "{Space down}"
+        ; 按下空格
+        Send "{Space down}"
 
-            ; 循环休眠，支持中途退出
-            loop this.defensePause * 10 {
-                if (!this.isActive) {
-                    Send "{Space up}"
-                    return
-                }
-                Sleep(100)
+        ; 循环休眠，支持中途退出
+        loop this.defensePause * 10 {
+            if (!this.isActive) {
+                Send "{Space up}"
+                return
             }
+            Sleep(100)
+        }
 
-            ; 释放空格，等待0.5秒恢复体力
-            Send "{Space up}"
-            loop 5 {
-                if (!this.isActive)
-                    return
-                Sleep(100)
-            }
-        } else {
-            ; 游戏窗口未激活，释放防御并稍微等待
-            Send "{Space up}"
-            Sleep(1000)
+        ; 释放空格，等待0.5秒恢复体力
+        Send "{Space up}"
+        loop 5 {
+            if (!this.isActive)
+                return
+            Sleep(100)
         }
     }
 

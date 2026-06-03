@@ -39,20 +39,24 @@ class AutoOpenBoxPlugin extends PluginLifecycle {
         this.myGui.SetFont("s9 norm")
 
         ; 状态显示
-        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "运行中 ✅" : "已停止 ❌") " | 快捷键: " this.pluginHotkey)
+        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "运行中 ✅" : "已停止 ❌") " | 快捷键: " this
+        .pluginHotkey)
         this.progressText := this.myGui.Add("Text", "x15 y55 w280 c888888", "进度: 无")
 
         this.myGui.Add("Text", "x15 y75 w280 0x10")  ; 分隔线
 
         ; 开箱模式
         this.myGui.Add("Text", "x15 y90", "开箱模式:")
-        this.boxOpenModeDdl := this.myGui.Add("DropDownList", "x120 y88 w165 vBoxOpenModeChoice Choose" this.boxOpenMode, ["船仓", "仓库(推荐)"])
+        this.boxOpenModeDdl := this.myGui.Add("DropDownList", "x120 y88 w165 vBoxOpenModeChoice Choose" this.boxOpenMode,
+            ["船仓", "仓库(推荐)"])
 
         ; 开箱次数
         this.myGui.Add("Text", "x15 y120", "开箱次数:")
-        this.boxOpenCountDdl := this.myGui.Add("DropDownList", "x120 y118 w165 vBoxOpenCountChoice Choose" this.boxOpenCount, ["3次", "10次", "100次", "500次", "1000次", "自定义"])
+        this.boxOpenCountDdl := this.myGui.Add("DropDownList", "x120 y118 w165 vBoxOpenCountChoice Choose" this.boxOpenCount,
+            ["3次", "10次", "100次", "500次", "1000次", "自定义"])
 
-        this.customBoxCountEdit := this.myGui.Add("Edit", "x120 y148 w120 vCustomBoxCount Number Limit5 " (this.boxOpenCount == 6 ? "" : "Hidden"), this.customBoxCount)
+        this.customBoxCountEdit := this.myGui.Add("Edit", "x120 y148 w120 vCustomBoxCount Number Limit5 " (this.boxOpenCount ==
+            6 ? "" : "Hidden"), this.customBoxCount)
         this.customBoxCountText := this.myGui.Add("Text", "x245 y150 Hidden", "次")
 
         this.boxOpenCountDdl.OnEvent("Change", (*) => (
@@ -73,11 +77,6 @@ class AutoOpenBoxPlugin extends PluginLifecycle {
 
         if this.showGui {
             this.myGui.Show("w300 h270 Center")
-        }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
         }
     }
 
@@ -119,7 +118,7 @@ class AutoOpenBoxPlugin extends PluginLifecycle {
         if this.statusText {
             this.statusText.Value := "状态: 准备中 ⏳ | 快捷键: " this.pluginHotkey
         }
-        
+
         ; 启动异步开箱任务 (避免卡死主GUI)
         SetTimer(() => this.PerformOpening(boxOpenTimes), -10)
     }

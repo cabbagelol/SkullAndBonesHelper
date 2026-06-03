@@ -27,7 +27,8 @@ class RestartAppPlugin extends PluginLifecycle {
         this.myGui.SetFont("s9 norm")
 
         ; 状态显示
-        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已启用 ✅" : "已停用 ❌") " | 快捷键: " this.pluginHotkey)
+        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已启用 ✅" : "已停用 ❌") " | 快捷键: " this
+        .pluginHotkey)
 
         this.myGui.Add("Text", "x15 y55 w280 0x10")  ; 分隔线
 
@@ -52,16 +53,11 @@ class RestartAppPlugin extends PluginLifecycle {
         if this.showGui {
             this.myGui.Show("w300 h245 Center")
         }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
-        }
     }
 
     Run() {
         super.Run()
-        
+
         mainExe := A_ScriptDir "\..\..\Main.exe"
         mainAhk := A_ScriptDir "\..\..\Main.ahk"
 
@@ -78,7 +74,7 @@ class RestartAppPlugin extends PluginLifecycle {
 
         ToolTip("主程序重启中...", 10, 50)
         SetTimer(() => ToolTip(), -2000)
-        
+
         ; 重启主程序后，该进程本身应退出（主程序会重新加载并管理它）
         ExitApp()
     }

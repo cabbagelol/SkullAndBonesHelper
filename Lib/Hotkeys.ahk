@@ -1,104 +1,57 @@
 ; Lib\Hotkeys.ahk
+; 热键绑定管理模块 - 支持物理热键的动态绑定与热重载
 
-global registeredMainHotkeys := Map(
-    "autoClick", "",
-    "autoOpenBox", "",
-    "timer", "",
-    "antiKick", "",
-    "pasteChat", "",
-    "defense", ""
-)
+global registeredMainHotkeys := Map()  ; 存储已注册的物理热键 ("folderName_hkName" => "hotkeyString")
 
-; 应用热键
+; 动态应用热键
 ApplyHotkeys() {
-    global config, registeredMainHotkeys
+    global config, registeredMainHotkeys, pluginList
 
-    ; 1. 关停所有之前由主程序物理注册的旧热键，防止传递与残留
-    for name, key in registeredMainHotkeys {
-        if (key != "") {
-            try Hotkey(key, "Off")
-            registeredMainHotkeys[name] := ""
+    ; 1. 关停所有之前由主程序物理注册的旧热键，防止残留与按键冲突
+    for keyName, hotkeyStr in registeredMainHotkeys.Clone() {
+        if (hotkeyStr != "") {
+            try Hotkey(hotkeyStr, "Off")
         }
     }
+    registeredMainHotkeys.Clear()
 
-    ; 2. 根据插件运行状态，绑定新热键或向运行中的插件发送更新通知
-    
-    ; 左键自动
-    if (!IsPluginRunning("AutoClick")) {
-        key := config["hotkeys"]["autoClick"]
-        if (IsValidHotkey(key, ["LButton"])) {
-            try {
-                Hotkey(key, HotkeyTrigger_AutoClick, "On")
-                registeredMainHotkeys["autoClick"] := key
+    ; 2. 动态遍历所有扫描到的插件，并根据运行状态绑定热键或发送通知
+    for folderName, info in pluginList {
+        if !info.Has("hotkeys") {
+            continue
+        }
+
+        isProcessRunning := IsPluginRunning(folderName)
+
+        for hk in info["hotkeys"] {
+            hkName := hk["name"]
+            defaultKey := hk["default"]
+
+            ; 获取对应的配置段和键
+            configKey := GetHotkeyConfigKey(folderName, hkName)
+            userKey := GetUserConfig(configKey["section"], configKey["key"], defaultKey)
+
+            if (userKey = "") {
+                continue
+            }
+
+            if (!isProcessRunning) {
+                ; 特殊排除规则：如果是左键自动插件（AutoClick）下的 autoClick 热键，且设定为 LButton，则不能被物理热键注册，避免直接拦截左键。
+                excludeList := (folderName = "AutoClick" && hkName = "autoClick") ? ["LButton"] : []
+                if (IsValidHotkey(userKey, excludeList)) {
+                    try {
+                        ; 使用闭包创建通用的激活函数并传参
+                        targetFolder := folderName
+                        triggerFunc := (*) => StartPlugin(targetFolder, "/active")
+                        Hotkey(userKey, triggerFunc, "On")
+                        registeredMainHotkeys[folderName "_" hkName] := userKey
+                    }
+                }
+            } else {
+                ; 插件正在运行，向其发送快捷键热重载的周期消息 (0x8002)
+                NotifyPluginHotkeyUpdate(folderName)
             }
         }
-    } else {
-        NotifyPluginHotkeyUpdate("AutoClick")
-    }
-
-    ; 自动打开箱子
-    if (!IsPluginRunning("AutoOpenBox")) {
-        key := config["hotkeys"]["autoOpenBox"]
-        if (IsValidHotkey(key)) {
-            try {
-                Hotkey(key, HotkeyTrigger_AutoOpenBox, "On")
-                registeredMainHotkeys["autoOpenBox"] := key
-            }
-        }
-    } else {
-        NotifyPluginHotkeyUpdate("AutoOpenBox")
-    }
-
-    ; 计时器
-    if (!IsPluginRunning("Timer")) {
-        key := config["hotkeys"]["timer"]
-        if (IsValidHotkey(key)) {
-            try {
-                Hotkey(key, HotkeyTrigger_Timer, "On")
-                registeredMainHotkeys["timer"] := key
-            }
-        }
-    } else {
-        NotifyPluginHotkeyUpdate("Timer")
-    }
-
-    ; 防踢状态
-    if (!IsPluginRunning("AntiKick")) {
-        key := config["hotkeys"]["antiKick"]
-        if (IsValidHotkey(key)) {
-            try {
-                Hotkey(key, HotkeyTrigger_AntiKick, "On")
-                registeredMainHotkeys["antiKick"] := key
-            }
-        }
-    } else {
-        NotifyPluginHotkeyUpdate("AntiKick")
-    }
-
-    ; 粘贴聊天
-    if (!IsPluginRunning("PasteChat")) {
-        key := config["hotkeys"]["pasteChat"]
-        if (IsValidHotkey(key)) {
-            try {
-                Hotkey(key, HotkeyTrigger_PasteChat, "On")
-                registeredMainHotkeys["pasteChat"] := key
-            }
-        }
-    } else {
-        NotifyPluginHotkeyUpdate("PasteChat")
-    }
-
-    ; 间歇防御
-    if (!IsPluginRunning("Defense")) {
-        key := config["hotkeys"]["defense"]
-        if (IsValidHotkey(key)) {
-            try {
-                Hotkey(key, HotkeyTrigger_Defense, "On")
-                registeredMainHotkeys["defense"] := key
-            }
-        }
-    } else {
-        NotifyPluginHotkeyUpdate("Defense")
     }
 }
 
@@ -126,37 +79,11 @@ NotifyPluginHotkeyUpdate(pluginFolderName) {
         return
     }
     pluginTitle := pluginList[pluginFolderName]["name"] " v" pluginList[pluginFolderName]["version"]
-    
+
     DetectHiddenWindows(true)
     if WinExist(pluginTitle) {
         PostMessage(0x8002, 0, 0, , pluginTitle)
     }
-}
-
-; --- 快捷按键触发器 (当插件未运行，按下热键时，在后台启动并立即激活功能，不显示GUI) ---
-
-HotkeyTrigger_AutoClick(*) {
-    StartPlugin("AutoClick", "/active")
-}
-
-HotkeyTrigger_Timer(*) {
-    StartPlugin("Timer", "/active")
-}
-
-HotkeyTrigger_AntiKick(*) {
-    StartPlugin("AntiKick", "/active")
-}
-
-HotkeyTrigger_AutoOpenBox(*) {
-    StartPlugin("AutoOpenBox", "/active")
-}
-
-HotkeyTrigger_PasteChat(*) {
-    StartPlugin("PasteChat", "/active")
-}
-
-HotkeyTrigger_Defense(*) {
-    StartPlugin("Defense", "/active")
 }
 
 ; --- 界面操作切换器 (菜单栏点击或列表双击触发，显示或唤醒配置GUI) ---

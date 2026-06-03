@@ -33,7 +33,8 @@ class TimerPlugin extends PluginLifecycle {
         this.myGui.SetFont("s9 norm")
 
         ; 状态显示
-        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "运行中 ✅" : "已停止 ❌") " | 快捷键: " this.pluginHotkey)
+        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "运行中 ✅" : "已停止 ❌") " | 快捷键: " this
+        .pluginHotkey)
 
         this.myGui.Add("Text", "x15 y55 w280 0x10")  ; 分隔线
 
@@ -61,11 +62,6 @@ class TimerPlugin extends PluginLifecycle {
 
         if this.showGui {
             this.myGui.Show("w300 h260 Center")
-        }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
         }
     }
 

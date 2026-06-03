@@ -12,12 +12,12 @@ class AutoClickPlugin extends PluginLifecycle {
     autoClickModel := 1
     pluginHotkey := ""
     isAutoClickToggleModeEnabled := false
-    
+
     myGui := 0
     statusText := 0
     downEdit := 0
     upEdit := 0
-    modelEdit := 0
+    modelDdl := 0
     hotkeyCtrl := 0
 
     Init() {
@@ -38,7 +38,8 @@ class AutoClickPlugin extends PluginLifecycle {
         this.myGui.SetFont("s9 norm")
 
         ; 状态显示
-        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已开启 ✅" : "已关闭 ❌") " | 快捷键: " this.pluginHotkey)
+        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已开启 ✅" : "已关闭 ❌") " | 快捷键: " this
+        .pluginHotkey)
 
         this.myGui.Add("Text", "x15 y55 w280 0x10")  ; 分隔线
 
@@ -54,27 +55,20 @@ class AutoClickPlugin extends PluginLifecycle {
         this.myGui.Add("UpDown", "Range1-1000", this.upDelay)
 
         this.myGui.Add("Text", "x15 y160", "触发模式:")
-        this.myGui.Add("Text", "x15 y180 w200 c535353", "(1)按住触发 (2)切换触发")
-        this.modelEdit := this.myGui.Add("Edit", "x210 y158 w70 Number", this.autoClickModel)
-        this.myGui.Add("UpDown", "Range1-2", this.autoClickModel)
+        this.modelDdl := this.myGui.Add("DropDownList", "x150 y158 w130 Choose" this.autoClickModel, ["按住触发", "切换触发"])
 
-        this.myGui.Add("Text", "x15 y205", "快捷键:")
-        this.hotkeyCtrl := this.myGui.Add("Hotkey", "x210 y203 w70", this.pluginHotkey)
+        this.myGui.Add("Text", "x15 y195", "快捷键:")
+        this.hotkeyCtrl := this.myGui.Add("Hotkey", "x210 y193 w70", this.pluginHotkey)
 
-        this.myGui.Add("Text", "x15 y235 w280 0x10")  ; 分隔线
+        this.myGui.Add("Text", "x15 y225 w280 0x10")  ; 分隔线
 
         ; 按钮区域
-        this.myGui.Add("Button", "x15 y250 w90 h30", "保存设置").OnEvent("Click", (*) => this.SaveSettings())
-        this.myGui.Add("Button", "x115 y250 w90 h30", "开启/关闭").OnEvent("Click", (*) => this.Toggle())
-        this.myGui.Add("Button", "x215 y250 w70 h30", "关闭").OnEvent("Click", (*) => ExitApp())
+        this.myGui.Add("Button", "x15 y240 w90 h30", "保存设置").OnEvent("Click", (*) => this.SaveSettings())
+        this.myGui.Add("Button", "x115 y240 w90 h30", "开启/关闭").OnEvent("Click", (*) => this.Toggle())
+        this.myGui.Add("Button", "x215 y240 w70 h30", "关闭").OnEvent("Click", (*) => ExitApp())
 
         if this.showGui {
-            this.myGui.Show("w300 h295 Center")
-        }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
+            this.myGui.Show("w300 h285 Center")
         }
     }
 
@@ -151,7 +145,7 @@ class AutoClickPlugin extends PluginLifecycle {
 
         this.downDelay := this.downEdit.Value
         this.upDelay := this.upEdit.Value
-        this.autoClickModel := this.modelEdit.Value
+        this.autoClickModel := this.modelDdl.Value
 
         SetPluginConfig("Settings", "DownDelay", this.downDelay)
         SetPluginConfig("Settings", "UpDelay", this.upDelay)

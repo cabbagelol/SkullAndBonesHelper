@@ -4,7 +4,7 @@
 ; --- 全局变量 ---
 global pluginList := Map()          ; 存储所有插件信息 (插件文件夹名 => 信息Map)
 global pluginProcesses := Map()     ; 存储运行中的插件进程PID (插件文件夹名 => PID)
-global pluginDir := A_ScriptDir "\public"  ; 插件根目录
+global pluginDir := A_ScriptDir "\Public"  ; 插件根目录
 global pluginManagerGui := 0        ; 插件管理GUI句柄
 global pluginLv := 0                ; 插件列表控件
 
@@ -140,7 +140,7 @@ ReadPluginInfo(jsonPath) {
     try {
         jsonText := FileRead(jsonPath, "UTF-8")
 
-        ; 简易 JSON 解析器 (针对 packname.json 的扁平结构)
+        ; 简易 JSON 解析器
         info := Map()
 
         ; 解析字符串字段
@@ -149,6 +149,15 @@ ReadPluginInfo(jsonPath) {
                 info[key] := m[1]
             } else {
                 info[key] := ""
+            }
+        }
+
+        ; 解析布尔控制字段 (默认均为 true)
+        for _, key in ["visible", "uninstallable", "closable", "runnable"] {
+            if RegExMatch(jsonText, '"' key '"\s*:\s*(true|false)', &m) {
+                info[key] := (m[1] = "true")
+            } else {
+                info[key] := true
             }
         }
 
@@ -162,6 +171,9 @@ ReadPluginInfo(jsonPath) {
                 pos := urlMatch.Pos + urlMatch.Len
             }
         }
+
+        ; 解析 hotkeys 数组
+        info["hotkeys"] := ParsePluginHotkeys(jsonText)
 
         ; 验证必要字段
         if info["name"] = "" {
@@ -313,6 +325,7 @@ ImportPlugin() {
 
         ; 刷新插件列表
         LoadPlugins()
+        UpdateFunctionList()
 
         MsgBox("插件「" info["name"] "」(v" info["version"] ") 导入成功！", "导入完成", 0x40)
 
@@ -366,6 +379,7 @@ UninstallPlugin(pluginFolderName) {
 
         ; 刷新列表
         RefreshPluginListView()
+        UpdateFunctionList()
     } catch as e {
         MsgBox("卸载插件失败: " e.Message, "错误", 0x10)
     }
@@ -403,7 +417,7 @@ ShowPluginManager(*) {
     pluginManagerGui.SetFont("s11 bold")
     pluginManagerGui.Add("Text", "x15 y10 w400", "已安装的插件")
     pluginManagerGui.SetFont("s9 norm")
-    pluginManagerGui.Add("Text", "x15 y30 w400 c888888", "插件存放在 public/ 目录下，每个插件需包含 main.ahk 和 packname.json")
+    pluginManagerGui.Add("Text", "x15 y30 w500 c888888", "插件存放在 public/ 目录下，每个插件需包含 main.ahk 和 packname.json")
 
     ; 插件列表 ListView
     pluginLv := pluginManagerGui.Add("ListView", "x15 y55 w460 h250 -Multi AltSubmit Grid", ["名称", "版本", "作者", "状态",
@@ -494,8 +508,13 @@ GetSelectedPluginFolder() {
 
 ; 启动选中的插件
 PluginAction_Start() {
+    global pluginList
     folder := GetSelectedPluginFolder()
     if folder != "" {
+        if (pluginList.Has(folder) && pluginList[folder].Has("runnable") && !pluginList[folder]["runnable"]) {
+            MsgBox("错误: 该插件已被配置为不可启动！", "权限限制", 0x10)
+            return
+        }
         StartPlugin(folder)
         RefreshPluginListView()
     }
@@ -503,8 +522,13 @@ PluginAction_Start() {
 
 ; 停止选中的插件
 PluginAction_Stop() {
+    global pluginList
     folder := GetSelectedPluginFolder()
     if folder != "" {
+        if (pluginList.Has(folder) && pluginList[folder].Has("closable") && !pluginList[folder]["closable"]) {
+            MsgBox("错误: 该插件已被配置为不可关闭！", "权限限制", 0x10)
+            return
+        }
         StopPlugin(folder)
         RefreshPluginListView()
     }
@@ -512,8 +536,13 @@ PluginAction_Stop() {
 
 ; 卸载选中的插件
 PluginAction_Uninstall() {
+    global pluginList
     folder := GetSelectedPluginFolder()
     if folder != "" {
+        if (pluginList.Has(folder) && pluginList[folder].Has("uninstallable") && !pluginList[folder]["uninstallable"]) {
+            MsgBox("错误: 该插件已被配置为不可卸载！", "权限限制", 0x10)
+            return
+        }
         UninstallPlugin(folder)
     }
 }

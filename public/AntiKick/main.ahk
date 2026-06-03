@@ -33,7 +33,8 @@ class AntiKickPlugin extends PluginLifecycle {
         this.myGui.SetFont("s9 norm")
 
         ; 状态显示
-        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已启用 ✅" : "已关闭 ❌") " | 快捷键: " this.pluginHotkey)
+        this.statusText := this.myGui.Add("Text", "x15 y35 w280 c888888", "状态: " (this.isActive ? "已启用 ✅" : "已关闭 ❌") " | 快捷键: " this
+        .pluginHotkey)
 
         ; 最近按键显示
         this.lastKeyText := this.myGui.Add("Text", "x15 y55 w280 c888888", "最近发送: 无")
@@ -58,11 +59,6 @@ class AntiKickPlugin extends PluginLifecycle {
         if this.showGui {
             this.myGui.Show("w300 h210 Center")
         }
-
-        ; 如果启动时要求激活
-        if this.isActive {
-            this.Run()
-        }
     }
 
     Toggle() {
@@ -80,7 +76,7 @@ class AntiKickPlugin extends PluginLifecycle {
     RunAntiKick(intervalMs) {
         super.Run()
         this.interval := intervalMs
-        
+
         ; 使用 Class 方法作为 SetTimer 目标
         this.randomKeyTimer := () => this.SendRandomKey()
         SetTimer(this.randomKeyTimer, this.interval)

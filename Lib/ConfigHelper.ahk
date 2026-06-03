@@ -113,20 +113,8 @@ SetPluginConfig(section, key, value) {
     return SetUserConfig(configKey["section"], configKey["key"], value)
 }
 
-; 注册插件快捷键
-RegisterPluginHotkey(name, callback) {
-    global activePluginHotkeys
-    packPath := A_ScriptDir "\packname.json"
-
-    if !FileExist(packPath) {
-        MsgBox("错误: 缺少 packname.json，无法注册快捷键！", "错误", 0x10)
-        return false
-    }
-
-    ; 读取并解析 json (支持单行/多行，限制最多读取/注册2个快捷键)
-    jsonText := FileRead(packPath, "UTF-8")
+ParsePluginHotkeys(jsonText) {
     hotkeys := []
-    
     if RegExMatch(jsonText, '"hotkeys"\s*:\s*\[([^\]]*)\]', &m) {
         hotkeysStr := m[1]
         pos := 1
@@ -149,6 +137,22 @@ RegisterPluginHotkey(name, callback) {
             pos := objMatch.Pos + objMatch.Len
         }
     }
+    return hotkeys
+}
+
+; 注册插件快捷键
+RegisterPluginHotkey(name, callback) {
+    global activePluginHotkeys
+    packPath := A_ScriptDir "\packname.json"
+
+    if !FileExist(packPath) {
+        MsgBox("错误: 缺少 packname.json，无法注册快捷键！", "错误", 0x10)
+        return false
+    }
+
+    ; 读取并解析 json (支持单行/多行，限制最多读取/注册2个快捷键)
+    jsonText := FileRead(packPath, "UTF-8")
+    hotkeys := ParsePluginHotkeys(jsonText)
 
     ; 查找匹配 of 快捷键名字
     found := false
@@ -282,7 +286,7 @@ class PluginLifecycle {
         SplitPath(A_ScriptDir, &folderName)
         SetUserConfig("PluginStatus", folderName, "0")
         if (!this.showGui) {
-            ExitApp()
+            ;todo close gui
         }
     }
 
@@ -309,13 +313,13 @@ class PluginLifecycle {
         if (this.hotkeyName = "" || !this.hotkeyCallback) {
             return
         }
-        
+
         ; 移除旧快捷键触发
         if activePluginHotkeys.Has(this.hotkeyName) {
             oldKey := activePluginHotkeys[this.hotkeyName]
             try Hotkey(oldKey, "Off")
         }
-        
+
         ; 注册新快捷键
         newKey := RegisterPluginHotkey(this.hotkeyName, this.hotkeyCallback)
         if (newKey) {
